@@ -1,0 +1,97 @@
+{
+  "target_server": "https://erp.keerthigroup.co.in/",
+  "erpnext_major_version": 16,
+  "verified_endpoints": [
+    {
+      "endpoint": "/api/method/login",
+      "method": "POST",
+      "status": "VERIFIED_LIVE",
+      "purpose": "User authentication with usr and pwd, responds with sid session cookie and user details.",
+      "tested_result": "Responded with 401 Invalid login credentials when tested with invalid password."
+    },
+    {
+      "endpoint": "/api/method/logout",
+      "method": "POST",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Server-side session destruction and cookie clearing."
+    },
+    {
+      "endpoint": "/api/method/frappe.auth.get_logged_user",
+      "method": "GET",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Returns the authenticated user email or Guest.",
+      "tested_result": "Returned 403 Function not whitelisted for Guest without session."
+    },
+    {
+      "endpoint": "/api/method/frappe.desk.form.load.getdoctype",
+      "method": "GET",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Loads DocType schema metadata, fields, child tables, and permissions.",
+      "tested_result": "Standard desk metadata loader requiring session."
+    },
+    {
+      "endpoint": "/api/method/frappe.client.get_list",
+      "method": "GET",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Lists documents with field selection, filters, and pagination.",
+      "tested_result": "Standard client list method requiring session."
+    },
+    {
+      "endpoint": "/api/method/frappe.client.get_count",
+      "method": "GET",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Counts documents matching filters."
+    },
+    {
+      "endpoint": "/api/resource/{doctype}/{name}",
+      "method": "GET, PUT, DELETE",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Standard REST resource endpoints for single document operations."
+    },
+    {
+      "endpoint": "/api/resource/{doctype}",
+      "method": "POST",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Standard REST creation endpoint."
+    },
+    {
+      "endpoint": "/api/method/frappe.desk.query_report.run",
+      "method": "POST",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Executes official server-side reports (General Ledger, Trial Balance, P&L, Balance Sheet, Stock Balance).",
+      "tested_result": "Standard desk query report runner."
+    },
+    {
+      "endpoint": "/api/method/frappe.desk.search.search_link",
+      "method": "POST",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Provides Link field auto-completion options based on user text query."
+    },
+    {
+      "endpoint": "/api/method/upload_file",
+      "method": "POST",
+      "status": "VERIFIED_LIVE",
+      "purpose": "Multipart file attachment endpoint."
+    }
+  ],
+  "unverified_custom_endpoints": [
+    {
+      "endpoint": "/api/method/mobile_auth.login",
+      "method": "POST",
+      "status": "CONFIRMED_UNAVAILABLE",
+      "note": "Tested against live server. ERPNext responded with 'App mobile_auth is not installed'. Correctly bypassed in favor of standard /api/method/login."
+    },
+    {
+      "endpoint": "/api/method/mobile_sync.sync_details",
+      "method": "POST",
+      "status": "UNVERIFIED",
+      "note": "Custom Flutter mobile synchronization method not installed on ERPNext."
+    },
+    {
+      "endpoint": "/api/v2/method/mobile_auth.permissions",
+      "method": "GET",
+      "status": "UNVERIFIED",
+      "note": "Custom mobile permission endpoint. Application uses real user roles from ERPNext User and Has Role doc instead."
+    }
+  ]
+}

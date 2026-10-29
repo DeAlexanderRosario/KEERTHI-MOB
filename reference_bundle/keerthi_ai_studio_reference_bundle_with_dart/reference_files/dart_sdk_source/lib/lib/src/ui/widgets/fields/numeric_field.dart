@@ -1,0 +1,81 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'base_field.dart';
+import 'field_helpers.dart';
+import '../../../utils/translate.dart';
+
+/// Widget for numeric field types (Int, Float, Currency, Percent)
+class NumericField extends BaseField {
+  const NumericField({
+    super.key,
+    required super.field,
+    super.value,
+    super.onChanged,
+    super.enabled,
+    super.style,
+  });
+
+  @override
+  Widget buildField(BuildContext context) {
+    final isInt = field.fieldtype == 'Int';
+    final isCurrency = field.fieldtype == 'Currency';
+    final isPercent = field.fieldtype == 'Percent';
+
+    return FormBuilderTextField(
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      key: ValueKey('numeric_${field.fieldname}'),
+      name: field.fieldname ?? '',
+      initialValue: value?.toString() ?? field.defaultValue ?? '',
+      enabled: enabled && !field.readOnly,
+      inputFormatters: [
+        ...?style?.inputFormatters,
+        if (isInt)
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9\-]'))
+        else
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
+      ],
+      keyboardType: TextInputType.numberWithOptions(decimal: !isInt),
+      decoration:
+          style?.decoration ??
+          InputDecoration(
+            hintText: field.placeholder,
+            border: const OutlineInputBorder(),
+            filled: field.readOnly,
+            fillColor: field.readOnly ? Colors.grey[200] : null,
+            prefixText: isCurrency ? '₹ ' : null,
+            suffixText: isPercent ? '%' : null,
+          ),
+      // Stays null for a field that is neither required nor non-negative, so
+      // those fields validate exactly as before.
+      validator: field.reqd || field.nonNegative
+          ? (value) {
+              if (field.reqd) {
+                final required = requiredValidator(value, field.displayLabel);
+                if (required != null) return required;
+                final numValue = isInt
+                    ? int.tryParse(value!)
+                    : double.tryParse(value!);
+                if (numValue == null) {
+                  return 'Please enter a valid number';
+                }
+              }
+              if (field.rejectsAsNegative(value)) {
+                return sdkTr('Value cannot be negative for {0}', [
+                  field.displayLabel,
+                ]);
+              }
+              return null;
+            }
+          : null,
+      onChanged: (val) {
+        if (val != null && val.isNotEmpty) {
+          final numValue = isInt ? int.tryParse(val) : double.tryParse(val);
+          onChanged?.call(numValue);
+        } else {
+          onChanged?.call(null);
+        }
+      },
+    );
+  }
+}

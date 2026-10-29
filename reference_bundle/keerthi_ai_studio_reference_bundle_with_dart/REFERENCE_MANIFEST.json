@@ -1,0 +1,20 @@
+{
+  "bundle": "Keerthi ERP AI Studio Reference Bundle with Dart",
+  "purpose": "Use Dart SDK source as behavioral reference for a TypeScript/JavaScript web implementation.",
+  "contents": {
+    "spec": "keerthi_ai_studio_core_logic_role_plan.json",
+    "dart_source": "reference_files/dart_sdk_source/lib/",
+    "original_archives": [
+      "reference_files/dart_sdk_archives/lib.zip",
+      "reference_files/dart_sdk_archives/api.zip",
+      "reference_files/dart_sdk_archives/sync.zip",
+      "reference_files/dart_sdk_archives/services.zip",
+      "reference_files/dart_sdk_archives/test.zip",
+      "reference_files/dart_sdk_archives/example.zip"
+    ],
+    "package_metadata": "reference_files/pubspec.yaml",
+    "sdk_entry_point": "reference_files/frappe_sdk.dart",
+    "starter_scaffold": "reference_files/keerthi-erp-core-starter.zip"
+  },
+  "critical_note": "Dart is reference behavior only; implement a TypeScript/JavaScript equivalent for the web app. Verify custom endpoints on the target ERPNext site."
+}

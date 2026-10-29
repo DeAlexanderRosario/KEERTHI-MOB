@@ -1,0 +1,235 @@
+/// Frappe Mobile SDK - Production-ready Flutter package for Frappe
+///
+/// This package provides:
+/// - Direct Frappe API access (Auth, CRUD, file upload)
+/// - Dynamic form rendering using Frappe metadata
+/// - Offline-first architecture with SQLite
+/// - Bi-directional sync engine
+/// - Generic storage (no table per DocType)
+library;
+
+// Core models
+export 'src/models/app_config.dart';
+export 'src/models/doc_type_meta.dart';
+export 'src/models/doc_field.dart';
+export 'src/models/document.dart';
+export 'src/models/mobile_form_name.dart';
+export 'src/models/workflow_transition.dart';
+export 'src/models/link_filter_result.dart';
+export 'src/models/link_search_policy.dart';
+// #53 (A5): outbox types on the public surface so app teams build type-safe
+// outbox UI without reaching into `src/` via implementation_imports.
+export 'src/models/outbox_row.dart'
+    show OutboxRow, OutboxState, OutboxOperation, ErrorCode, ErrorCodeHelpers;
+// Attachment media. All three types are REQUIRED on the public surface, not
+// conveniences: `FormScreen.imagePickSource` takes a callback the host must
+// PRODUCE an `ImagePickSource` from, which no amount of inference can supply,
+// and `FrappeSDK.mediaStoreUsage()` returns a `MediaStoreUsage` a host cannot
+// otherwise store in a field or return from its own function.
+export 'src/models/image_pick_source.dart'
+    show ImagePickSource, ImagePickSourceHelpers;
+export 'src/models/media_store_usage.dart' show MediaStoreUsage;
+// `ResolveMediaFn` appears in the signature of `FieldFactory.createField`,
+// which is exported bare below and documented "Override this method to
+// customize field creation" — so a host that overrides it must NAME this type.
+// Exporting `field_factory.dart` does not carry the typedef: Dart re-exports a
+// library's own declarations and whatever it re-`export`s, never its imports,
+// and `field_factory.dart` only imports this one. Without this line the only
+// route is an `implementation_imports` violation.
+export 'src/services/media_resolver.dart' show ResolveMediaFn;
+// Same reasoning for `ReclaimAttachmentFn`: it is a parameter of
+// `FieldFactory.createField` and of the `AttachField` / `ImageField`
+// constructors, so a host supplying its own reclaim — or overriding the
+// factory — has to name the type. `media_store.dart` is otherwise internal, so
+// only the typedef is shown.
+export 'src/utils/media_store.dart' show ReclaimAttachmentFn;
+export 'src/utils/image_downscale.dart'
+    show ImageCaptureLimits, ImageUploadSettings, downscalePickedImage;
+
+// Database
+export 'src/database/app_database.dart';
+export 'src/database/entities/doctype_meta_entity.dart';
+export 'src/database/entities/link_option_entity.dart';
+export 'src/database/daos/doctype_meta_dao.dart';
+
+// API Client (Direct Frappe API Access)
+export 'src/api/client.dart' show FrappeClient;
+export 'src/api/doctype_service.dart' show DoctypeService;
+export 'src/api/document_service.dart' show DocumentService;
+// Narrowed on purpose: hosts need the field name and the blank-stripping
+// helper to mint and carry a uuid correctly, plus the guard itself for tests.
+// The internal typedef and the attempt cap stay unexported.
+export 'src/api/create_idempotency.dart'
+    show
+        CreateIdempotencyGuard,
+        // The two typedefs are exported for the same reason `ResolveMediaFn`
+        // is: assignment infers the type, but a host that DECLARES or STORES
+        // one has to be able to name it.
+        OnResolvedExisting,
+        FindByMobileUuid,
+        kMobileUuidField,
+        readMobileUuid,
+        withoutBlankMobileUuid,
+        isAmbiguousCreateFailure;
+export 'src/api/attachment_service.dart' show AttachmentService;
+export 'src/api/exceptions.dart'
+    show
+        FrappeException,
+        AuthException,
+        ApiException,
+        NetworkException,
+        ValidationException;
+export 'src/api/frappe_document.dart' show FrappeDocument;
+export 'src/api/query_builder.dart' show QueryBuilder;
+export 'src/api/oauth2_helper.dart'
+    show OAuth2Helper, OAuth2TokenResponse, PkcePair;
+
+// SDK Initialization (Easy Setup)
+export 'src/sdk/frappe_sdk.dart';
+
+// Services
+export 'src/services/auth_service.dart';
+export 'src/services/session_health.dart';
+export 'src/services/app_status_service.dart';
+export 'src/services/meta_service.dart';
+export 'src/services/permission_service.dart';
+export 'src/services/translation_service.dart';
+export 'src/services/sync_service.dart';
+export 'src/services/offline_repository.dart';
+export 'src/services/link_option_service.dart';
+export 'src/services/location_readiness.dart'
+    show
+        LocationReadiness,
+        checkDeviceLocationReadiness,
+        isLocationReady,
+        openDeviceLocationSettings,
+        openLocationAppSettings,
+        requestDeviceLocationPermission;
+export 'src/services/mobile_creation_capture.dart'
+    show
+        MobileCreationCapture,
+        PendingCreationMeta,
+        kCreationLocationSaveWait,
+        readDeviceLocationAsGeoJson;
+export 'src/services/link_field_coordinator.dart';
+export 'src/services/workflow_service.dart';
+
+// Screens
+export 'src/screens/mobile_home_screen.dart';
+
+// Offline mode toggle (Spec §7)
+export 'src/models/offline_mode.dart' show OfflineMode;
+export 'src/models/offline_mode_notifier.dart' show OfflineModeNotifier;
+export 'src/services/offline_transition_service.dart'
+    show
+        OfflineTransitionService,
+        OfflineTransitionState,
+        TransitionIdle,
+        TransitionDraining,
+        TransitionDrainFailed,
+        TransitionWipingTables,
+        TransitionCompleted;
+export 'src/ui/offline_transition_screen.dart' show OfflineTransitionScreen;
+export 'src/ui/offline_transition_guard.dart' show OfflineTransitionGuard;
+
+// Security / tamper-detection
+export 'src/security/security_check.dart';
+export 'src/security/security_exception.dart';
+export 'src/security/security_event.dart';
+export 'src/security/frappe_security_service.dart';
+export 'src/security/frappe_security_guard.dart';
+
+// UI Components
+export 'src/ui/app_guard.dart';
+export 'src/ui/login_screen.dart';
+export 'src/ui/login_screen_style.dart';
+export 'src/ui/doctype_list_screen.dart';
+// Test seams for FormScreen's media fetcher.
+export 'src/ui/form_screen.dart' hide fetchMediaBytes, mediaFetchRequest;
+export 'src/ui/document_list_screen.dart';
+export 'src/ui/sync_status_screen.dart';
+export 'src/ui/form_renderer_helper.dart';
+export 'src/ui/widgets/form_builder.dart'; // Exports FrappeFormStyle, ButtonPressedCallback, OnButtonPressedCallback
+export 'src/ui/form/form_controller.dart'
+    show ChangeSource; // reactive source tag
+export 'src/ui/widgets/default_form_style.dart'; // Exports DefaultFormStyle
+export 'src/ui/widgets/fields/field_factory.dart';
+export 'src/ui/widgets/fields/base_field.dart'; // Exports FieldStyle
+export 'src/ui/widgets/fields/data_field.dart';
+export 'src/ui/widgets/fields/text_field.dart';
+export 'src/ui/widgets/fields/select_field.dart';
+export 'src/ui/widgets/fields/date_field.dart';
+export 'src/ui/widgets/fields/check_field.dart';
+export 'src/ui/widgets/fields/button_field.dart';
+export 'src/ui/widgets/fields/numeric_field.dart';
+export 'src/ui/widgets/fields/link_field.dart';
+export 'src/ui/widgets/fields/phone_field.dart';
+export 'src/ui/widgets/fields/geolocation_field.dart';
+export 'src/ui/widgets/fields/link_field_picker_mode.dart';
+export 'src/ui/widgets/fields/child_table_field.dart'
+    show
+        ChildTableFormBuilder,
+        ChildTableField,
+        ChildRowNoticeBuilder,
+        preserveChildIdentity;
+export 'src/ui/widgets/fields/child_table_cells.dart'
+    show
+        LinkTitleResolver,
+        childListViewFields,
+        resolveChildListViewCells,
+        resolveChildRowTitle;
+
+// Constants
+export 'src/constants/field_types.dart';
+export 'src/constants/oauth_constants.dart';
+
+// Utilities (Frappe expression parity)
+export 'src/utils/depends_on_evaluator.dart' show DependsOnEvaluator;
+export 'src/ui/widgets/location_required_barrier.dart'
+    show LocationRequiredBarrier;
+export 'src/utils/geo_json.dart' show GeoPoint, geoJsonPoint, parseGeoJsonPoint;
+export 'src/utils/mobile_creation_stamp.dart'
+    show
+        declaresCreationMeta,
+        formatFrappeDatetime,
+        mobileCreatedAtField,
+        mobileLatitudeLongitudeField,
+        stampCreationMeta;
+
+// Query (UnifiedResolver + FilterParser) — Spec §6
+export 'src/query/filter_errors.dart'
+    show FilterParseError, UnsupportedFilterError;
+export 'src/query/filter_parser.dart' show FilterParser;
+export 'src/query/frappe_timespan.dart' show FrappeTimespan, TimespanRange;
+export 'src/query/link_decorator.dart' show LinkDecorator, TargetMetaResolver;
+export 'src/query/parsed_query.dart' show ParsedQuery;
+export 'src/query/query_result.dart' show QueryResult, RowOrigin;
+export 'src/query/unified_resolver.dart'
+    show UnifiedResolver, BackgroundFetcher, IsOnlineFn;
+
+// UI surface + lifecycle (P6) — Spec §6.6, §7.x, §9.3
+export 'src/models/session_user.dart' show SessionUser;
+export 'src/services/atomic_wipe.dart' show AtomicWipe, OnCreateFn;
+export 'src/services/retry_priority.dart' show RetryPriority;
+export 'src/services/session_user_service.dart' show SessionUserService;
+export 'src/services/sync_controller.dart'
+    show SyncController, ConflictAction, DeleteCascadePlan;
+export 'src/sync/sync_state.dart'
+    show SyncState, DoctypeSyncState, QueueSummary, SyncErrorSummary;
+export 'src/sync/sync_state_notifier.dart' show SyncStateNotifier;
+export 'src/sync/push_engine.dart' show PayloadTransformerFn;
+export 'src/ui/widgets/sync_status_bar.dart' show SyncStatusBar;
+export 'src/ui/widgets/document_list_filter_chip.dart'
+    show DocumentListFilterChip, DocumentListFilter, DocumentListFilterCounts;
+export 'src/ui/widgets/delete_cascade_prompt.dart'
+    show showDeleteCascadePrompt, DeleteCascadeAction;
+export 'src/ui/screens/sync_errors_screen.dart' show SyncErrorsScreen;
+export 'src/ui/screens/sync_progress_screen.dart' show SyncProgressScreen;
+export 'src/ui/dialogs/logout_guard_dialog.dart'
+    show showLogoutGuardDialog, LogoutGuardAction;
+export 'src/ui/dialogs/force_logout_confirm.dart' show showForceLogoutConfirm;
+
+// Utils (debug tracer + user-friendly errors)
+export 'src/api/utils.dart' show extractErrorMessage, toUserFriendlyMessage;
+export 'src/utils/api_tracer.dart' show ApiTracer;
+export 'src/utils/translate.dart';

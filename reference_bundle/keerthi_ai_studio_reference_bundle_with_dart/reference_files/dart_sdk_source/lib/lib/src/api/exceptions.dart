@@ -1,0 +1,58 @@
+// Copyright (c) 2026, Bhushan Barbuddhe and contributors
+// For license information, please see license.txt
+
+class FrappeException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  /// Wire-capture diagnostics. Best-effort; populated by [RestHelper] on
+  /// HTTP ≥400 responses so the push-side error-log collector can rebuild
+  /// the exact request. Null on success paths and on non-HTTP failures.
+  String? requestUrl;
+  String? requestMethod;
+  Object? requestBody;
+  String? responseBodyRaw;
+  String? traceId;
+
+  FrappeException(this.message, [this.statusCode]);
+
+  @override
+  String toString() => 'FrappeException: $message (Status: $statusCode)';
+}
+
+class AuthException extends FrappeException {
+  AuthException(super.message, [super.statusCode]);
+
+  @override
+  String toString() => 'AuthException: $message (Status: $statusCode)';
+}
+
+class ApiException extends FrappeException {
+  final dynamic details;
+  ApiException(super.message, [super.statusCode, this.details]);
+
+  @override
+  String toString() =>
+      'ApiException: $message (Status: $statusCode) Details: $details';
+}
+
+class NetworkException extends FrappeException {
+  NetworkException(super.message, [super.statusCode]);
+
+  @override
+  String toString() => 'NetworkException: $message';
+}
+
+/// IMPORTANT: keep this extending [FrappeException] directly — NOT
+/// [ApiException]. `dispatchHttpSend` (lib/src/services/sync_engine_builder.dart)
+/// has an `on ApiException` clause *before* its `on ValidationException` clause.
+/// Dart matches catch clauses top-to-bottom by subtype, so making this a
+/// subtype of [ApiException] would let that earlier clause swallow validation
+/// failures and the dedicated HTTP 417 handling would become dead code.
+class ValidationException extends FrappeException {
+  final Map<String, dynamic>? errors;
+  ValidationException(String message, [this.errors]) : super(message, 417);
+
+  @override
+  String toString() => 'ValidationException: $message Errors: $errors';
+}

@@ -1,0 +1,993 @@
+{
+  "project": {
+    "name": "Keerthi ERPNext Web Application",
+    "purpose": "Build a production-oriented, role-aware web application that communicates reliably with the existing ERPNext v16 site and uses real server data.",
+    "target_erpnext": {
+      "base_url": "https://erp.keerthigroup.co.in/",
+      "major_version": 16,
+      "deployment_context": "Windows 11 + Docker Desktop; Frappe site name frontend",
+      "important_note": "Verify the live server and installed custom apps before assuming any custom endpoint exists. Do not store credentials in this JSON."
+    },
+    "primary_goal": "Implement one reusable communication core and generalized ERP engine, then build role-specific modules and dashboards on top of it."
+  },
+  "instructions_for_ai_studio": {
+    "role": "Act as a senior full-stack engineer, ERPNext/Frappe v16 integration specialist, security reviewer, and test engineer.",
+    "execution_rules": [
+      "First inspect the complete existing web application project and map its actual framework, routes, UI components, state management, authentication, API calls, tests, and environment variables.",
+      "Do not rewrite the project from scratch or replace working components before documenting what exists.",
+      "Use supplied Flutter SDK files as behavioral and API-flow references only; do not attempt to import Dart code into a React/Next.js web application.",
+      "Inspect the supplied SDK source and tests directly before inferring behavior. Distinguish implemented behavior, test expectations, and assumptions.",
+      "Build a file-by-file implementation plan, then implement in small, testable phases.",
+      "Preserve existing UI, design tokens, routes, and business functionality unless a change is necessary and documented.",
+      "Use actual ERPNext data only. Never silently fall back to mock data or hardcoded dashboard figures.",
+      "Do not claim an endpoint works until it has been verified against the target server or clearly label it unverified.",
+      "Do not expose API secrets, passwords, session IDs, CSRF tokens, or private keys in browser code, logs, screenshots, or committed files.",
+      "Do not bypass ERPNext permission checks or implement accounting ledger posting independently in the browser.",
+      "For every meaningful change, provide changed file list, rationale, test commands, test results, and any remaining risks."
+    ],
+    "first_deliverable": "A source-grounded audit report: current architecture, current API paths, actual modules/screens, existing role/permission behavior, test coverage, integration gaps, security issues, and an incremental implementation plan.",
+    "avoid": [
+      "Assuming standard ERPNext roles match the company's custom job roles.",
+      "Assuming custom endpoints mobile_sync.* or mobile_auth.* exist on the target server.",
+      "Using an unrestricted proxy that accepts arbitrary upstream URLs or arbitrary server method names.",
+      "Sending ERPNext API secrets to client-side JavaScript.",
+      "Retrying non-idempotent writes automatically.",
+      "Making up business fields, workflow states, reports, or permission assignments."
+    ]
+  },
+  "reference_files": {
+    "priority_order": [
+      {
+        "priority": 1,
+        "file": "Current web app project ZIP (the actual app AI Studio is meant to improve)",
+        "purpose": "Source of truth for current framework, routes, screens, API integrations, UI design, and existing functionality.",
+        "required_action": "Inspect package.json, app/src structure, routes, API helpers, auth, state, UI components, tests, and environment variable usage."
+      },
+      {
+        "priority": 2,
+        "file": "lib.zip",
+        "purpose": "Flutter Frappe SDK implementation reference.",
+        "known_areas": [
+          "lib/src/api/",
+          "lib/src/services/sync_engine_builder.dart",
+          "lib/src/services/permission_service.dart",
+          "lib/src/ui/form_screen.dart",
+          "lib/src/ui/doctype_list_screen.dart"
+        ],
+        "required_action": "Trace request construction, response parsing, auth/session behavior, permission loading, metadata-driven forms, document operations, and sync callback wiring."
+      },
+      {
+        "priority": 3,
+        "file": "api.zip",
+        "purpose": "API implementation reference from the Flutter SDK.",
+        "known_files": [
+          "api/client.dart",
+          "api/rest_helper.dart",
+          "api/doctype_service.dart",
+          "api/document_service.dart",
+          "api/auth.dart",
+          "api/attachment_service.dart",
+          "api/create_idempotency.dart",
+          "api/exceptions.dart",
+          "api/frappe_document.dart",
+          "api/oauth2_helper.dart",
+          "api/query_builder.dart",
+          "api/utils.dart"
+        ],
+        "required_action": "Use as reference for endpoint behavior, auth headers, response/error mapping, retries, and idempotency; verify the actual web app and current server behavior separately."
+      },
+      {
+        "priority": 4,
+        "file": "sync.zip",
+        "purpose": "Offline synchronization behavior reference.",
+        "known_files": [
+          "sync/pull_engine.dart",
+          "sync/pull_page_fetcher.dart",
+          "sync/pull_apply.dart",
+          "sync/push_engine.dart",
+          "sync/response_writeback.dart",
+          "sync/three_way_merge.dart",
+          "sync/idempotency_strategy.dart",
+          "sync/push_error.dart",
+          "sync/sync_state.dart"
+        ],
+        "required_action": "Document pull/push lifecycle, checkpointing, dirty-record protection, conflict behavior, idempotency, and retry rules. Implement web offline sync only if required by the current product."
+      },
+      {
+        "priority": 5,
+        "file": "services.zip",
+        "purpose": "SDK infrastructure services reference.",
+        "required_action": "Inspect service responsibilities and wiring; avoid duplicating existing functionality without reason."
+      },
+      {
+        "priority": 6,
+        "file": "test.zip",
+        "purpose": "SDK test and behavior reference.",
+        "required_action": "Group tests by API, auth, sync, database, dynamic forms, field widgets, and offline flows. Treat tests as evidence of intended behavior, not proof the live ERPNext site supports an endpoint."
+      },
+      {
+        "priority": 7,
+        "file": "example.zip",
+        "purpose": "Example app wiring and SDK usage.",
+        "known_files": [
+          "example/lib/main.dart",
+          "example/lib/config/app_config.example.dart",
+          "example/lib/creation_capture_probe.dart",
+          "example/pubspec.yaml"
+        ],
+        "required_action": "Understand how the SDK is initialized and used. Do not treat example UI as the target web app."
+      },
+      {
+        "priority": 8,
+        "file": "pubspec.yaml",
+        "purpose": "Flutter SDK package metadata and dependency reference.",
+        "known_facts": [
+          "Package: frappe_mobile_sdk",
+          "Version: 2.0.0-beta.4",
+          "Minimum Flutter: 3.35.0",
+          "Minimum Dart SDK: 3.9.0"
+        ],
+        "required_action": "Use only for SDK dependency/context understanding; do not copy Flutter dependencies into the web app."
+      },
+      {
+        "priority": 9,
+        "file": "keerthi-erp-core.zip",
+        "purpose": "Starter core implementation generated during this conversation.",
+        "required_action": "Review before reuse. It is untested against the live site and must not be assumed production-ready. Fix and test cookie extraction, CSRF, error propagation, type safety, route behavior, and security before deployment."
+      }
+    ],
+    "source_of_truth_order": [
+      "Current web app code for existing UI and frontend behavior",
+      "Live ERPNext server behavior and actual installed apps for endpoint availability and authorization",
+      "Flutter SDK implementation for reference behavior",
+      "SDK tests for intended or regression-tested behavior",
+      "This JSON for requested target architecture and requirements"
+    ]
+  },
+  "architecture": {
+    "pattern": "Layered modular monolith with a shared ERP communication core and metadata-driven business engine.",
+    "recommended_layers": [
+      {
+        "name": "Presentation",
+        "responsibilities": [
+          "Role-aware shell, navigation, dashboard, tables, forms, dialogs, charts, loading states, empty states, and error states.",
+          "Use reusable accessible UI components and preserve the existing app design system."
+        ]
+      },
+      {
+        "name": "Application/use-case layer",
+        "responsibilities": [
+          "Business use cases such as create sales invoice, receive payment, dispatch delivery, transfer stock, or create employee.",
+          "Coordinate validation, API calls, confirmation, refresh, and user feedback."
+        ]
+      },
+      {
+        "name": "Domain/module layer",
+        "responsibilities": [
+          "Module registry, DocType configurations, workflow-specific UI rules, report definitions, and typed domain models.",
+          "Keep module-specific rules separate from generic HTTP code."
+        ]
+      },
+      {
+        "name": "ERP communication core",
+        "responsibilities": [
+          "Authentication/session, request construction, response envelope parsing, error normalization, timeout/cancellation, safe retry policy, request IDs, and structured redacted logging.",
+          "Provide typed methods for metadata, list, count, get, create, update, delete, workflow actions, files, and reports."
+        ]
+      },
+      {
+        "name": "Secure server adapter",
+        "responsibilities": [
+          "If using Next.js, use server routes/actions for secrets and session-bound operations.",
+          "Expose explicit allowlisted operations; never an unrestricted arbitrary URL or method proxy.",
+          "Forward authenticated requests to ERPNext and preserve server authorization."
+        ]
+      },
+      {
+        "name": "ERPNext/Frappe",
+        "responsibilities": [
+          "Authoritative authentication, permissions, validation, workflow, document lifecycle, stock ledger, accounting ledger, and reports."
+        ]
+      }
+    ],
+    "recommended_web_stack_if_existing_app_matches": {
+      "framework": "Next.js App Router + TypeScript",
+      "styling": "Existing Tailwind CSS and shadcn/ui if already installed",
+      "data_fetching": "Reuse existing data-fetching library; otherwise choose a consistent query/cache strategy",
+      "charts": "Use existing chart library; otherwise use a React chart library such as Recharts",
+      "forms": "Schema/metadata-driven reusable form renderer with server errors mapped to fields",
+      "offline": "IndexedDB + outbox only if explicitly needed; do not implement Flutter SQLite code in browser"
+    }
+  },
+  "communication_core": {
+    "required_services": [
+      {
+        "name": "authService",
+        "methods": [
+          "login",
+          "logout",
+          "getSession",
+          "getCurrentUser",
+          "refreshOrRevalidateSession"
+        ],
+        "requirements": [
+          "Use the chosen secure session strategy.",
+          "Handle expired sessions predictably.",
+          "Never store passwords or long-lived secrets in localStorage."
+        ]
+      },
+      {
+        "name": "httpClient",
+        "methods": [
+          "request",
+          "get",
+          "post",
+          "put",
+          "delete"
+        ],
+        "requirements": [
+          "Same-origin web API calls by default.",
+          "JSON and non-JSON response handling.",
+          "Timeout and abort support.",
+          "Consistent error object including status, safe message, and correlation/request ID when available.",
+          "Redact cookies, authorization headers, passwords, tokens, and personal data from logs."
+        ]
+      },
+      {
+        "name": "metadataService",
+        "methods": [
+          "getDocTypeMeta",
+          "getFieldDefinitions",
+          "getLinkOptions",
+          "getChildTableMeta"
+        ],
+        "requirements": [
+          "Cache with invalidation and handle permission-denied metadata.",
+          "Honor field types, required flags, read-only flags, hidden fields, options, links, and child tables.",
+          "Never assume metadata alone grants permission to perform an action."
+        ]
+      },
+      {
+        "name": "documentService",
+        "methods": [
+          "list",
+          "count",
+          "get",
+          "create",
+          "update",
+          "delete",
+          "submit",
+          "cancel"
+        ],
+        "requirements": [
+          "Use explicit typed inputs and outputs.",
+          "Validate paging and sort parameters.",
+          "Map Frappe server validation messages into visible errors.",
+          "Do not retry create/update/delete/submit/cancel blindly.",
+          "Confirm destructive and irreversible actions."
+        ]
+      },
+      {
+        "name": "permissionService",
+        "methods": [
+          "getCurrentUserRoles",
+          "getDocTypePermissions",
+          "canRead",
+          "canCreate",
+          "canWrite",
+          "canDelete",
+          "canSubmit",
+          "canCancel",
+          "canReport"
+        ],
+        "requirements": [
+          "Use verified APIs or server-provided permissions.",
+          "Treat frontend checks as display logic only.",
+          "ERPNext server permission enforcement is authoritative.",
+          "Do not hardcode a user as Administrator based on email/name."
+        ]
+      },
+      {
+        "name": "workflowService",
+        "methods": [
+          "getAllowedActions",
+          "runAction",
+          "submit",
+          "cancel"
+        ],
+        "requirements": [
+          "Discover workflow/status capabilities from verified metadata or approved endpoints.",
+          "Use supported Frappe methods and server-side validation.",
+          "Do not fabricate workflow transitions."
+        ]
+      },
+      {
+        "name": "reportService",
+        "methods": [
+          "runApprovedReport",
+          "getDashboardKpis",
+          "getChartData"
+        ],
+        "requirements": [
+          "Use approved report endpoints or custom server methods verified on the target site.",
+          "Use date range, company, and permission filters where applicable.",
+          "Do not compute official financial statements in the browser from partial document lists."
+        ]
+      }
+    ],
+    "known_reference_endpoints_from_supplied_sdk": [
+      {
+        "method": "GET",
+        "path": "/api/method/frappe.desk.form.load.getdoctype",
+        "purpose": "DocType metadata",
+        "verification": "Verify actual response shape and permissions on target site."
+      },
+      {
+        "method": "GET",
+        "path": "/api/method/frappe.client.get_list",
+        "purpose": "List documents",
+        "verification": "Verify supported fields, filters, paging, and permissions."
+      },
+      {
+        "method": "GET",
+        "path": "/api/method/frappe.client.get_count",
+        "purpose": "Document count",
+        "verification": "Verify on target site."
+      },
+      {
+        "method": "GET",
+        "path": "/api/resource/{doctype}/{name}",
+        "purpose": "Get a document",
+        "verification": "Standard resource API; test access with least-privilege users."
+      },
+      {
+        "method": "POST",
+        "path": "/api/resource/{doctype}",
+        "purpose": "Create a document",
+        "verification": "Test validation and permission failures."
+      },
+      {
+        "method": "PUT",
+        "path": "/api/resource/{doctype}/{name}",
+        "purpose": "Update a document",
+        "verification": "Test validation, concurrency, and permission failures."
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/resource/{doctype}/{name}",
+        "purpose": "Delete a document",
+        "verification": "Restrict destructive actions and verify authorization."
+      },
+      {
+        "method": "POST",
+        "path": "/api/method/frappe.client.insert",
+        "purpose": "Alternative document insert method referenced by SDK",
+        "verification": "Use only if required and verified; do not duplicate create paths without reason."
+      },
+      {
+        "method": "POST",
+        "path": "/api/method/mobile_sync.sync_details",
+        "purpose": "Custom SDK sync metadata",
+        "verification": "Custom endpoint; verify app and method exist before use."
+      },
+      {
+        "method": "POST",
+        "path": "/api/method/mobile_sync.get_docs_with_children",
+        "purpose": "Custom bulk document fetch with child tables",
+        "verification": "Custom endpoint; verify app and method exist before use."
+      },
+      {
+        "method": "GET",
+        "path": "/api/v2/method/mobile_auth.permissions",
+        "purpose": "Permission service reference from supplied SDK",
+        "verification": "Custom endpoint; verify exact route, app, return shape, and role restrictions."
+      }
+    ],
+    "error_policy": {
+      "401": "Revalidate or clear session and route to login; avoid infinite redirect loops.",
+      "403": "Show permission-denied message; do not retry automatically.",
+      "404": "Show not found or unimplemented endpoint; do not silently return mock data.",
+      "417_or_422": "Show Frappe validation details and field errors when possible.",
+      "409": "Treat as conflict and offer safe refresh/review.",
+      "429": "Respect Retry-After if present; use bounded backoff for safe requests only.",
+      "5xx": "Show a recoverable server error with correlation ID if available.",
+      "network_or_timeout": "Show retry option for safe reads; do not automatically repeat non-idempotent writes."
+    }
+  },
+  "roles_and_permissions": {
+    "principles": [
+      "Read actual ERPNext roles and permissions before finalizing app roles.",
+      "The job-role labels below are proposed product personas, not assumed existing ERPNext roles.",
+      "Map product personas to one or more actual ERPNext roles through explicit configuration.",
+      "Every action must be authorized by ERPNext; the web UI only hides or disables actions for usability.",
+      "Use least privilege and test each persona with a real test account.",
+      "Never infer role from email, display name, department text, or client-side state."
+    ],
+    "personas": [
+      {
+        "key": "system_admin",
+        "label": "System Administrator",
+        "dashboard": [
+          "System health and API connection status",
+          "Authorized operational KPIs",
+          "User/role administration links",
+          "Integration errors and sync health"
+        ],
+        "module_visibility": [
+          "dashboard",
+          "sales",
+          "billing",
+          "accounts",
+          "purchases",
+          "stock",
+          "warehouse",
+          "delivery",
+          "hr",
+          "reports",
+          "settings"
+        ],
+        "permission_policy": "Use actual Administrator/role permissions from ERPNext; do not automatically grant every custom operation to this persona."
+      },
+      {
+        "key": "order_biller",
+        "label": "Order Biller / Sales Counter",
+        "dashboard": [
+          "Today's invoices",
+          "Draft and pending billing queue",
+          "Payment status",
+          "Allowed daily sales totals"
+        ],
+        "module_visibility": [
+          "billing",
+          "customers",
+          "items",
+          "sales_orders",
+          "sales_invoices",
+          "payments",
+          "returns_if_authorized"
+        ],
+        "actions": [
+          "Search permitted customers and items",
+          "Create permitted sales documents",
+          "Preview totals returned/calculated by ERPNext",
+          "Submit invoices only if actual permissions and workflow allow",
+          "Print or export only where authorized"
+        ],
+        "restrictions": [
+          "No general ledger or journal entry access by default",
+          "No unrestricted discounts, price overrides, or write-offs",
+          "No payment cancellation/refund unless explicitly authorized"
+        ]
+      },
+      {
+        "key": "accountant",
+        "label": "Accountant",
+        "dashboard": [
+          "Receivables",
+          "Payables",
+          "Unpaid invoices",
+          "Cash/bank summaries",
+          "Reconciliation and close tasks"
+        ],
+        "module_visibility": [
+          "accounts",
+          "sales_invoices",
+          "purchase_invoices",
+          "payment_entries",
+          "journal_entries",
+          "chart_of_accounts",
+          "general_ledger",
+          "trial_balance",
+          "profit_and_loss",
+          "balance_sheet",
+          "cash_flow",
+          "bank_reconciliation",
+          "tax_reports"
+        ],
+        "restrictions": [
+          "Use server-authorized reports and document actions",
+          "Do not independently alter posted ledger rows",
+          "Journal creation, posting, reversal, and period closing require explicit server permission"
+        ]
+      },
+      {
+        "key": "sales_staff",
+        "label": "Sales Staff",
+        "dashboard": [
+          "Assigned leads or customers if configured",
+          "Quotations and sales orders",
+          "Order statuses",
+          "Sales performance for permitted scope"
+        ],
+        "module_visibility": [
+          "customers",
+          "leads_if_installed",
+          "quotations",
+          "sales_orders",
+          "items"
+        ],
+        "restrictions": [
+          "Respect territory, owner, company, and document-level restrictions where configured",
+          "Do not assume permission to create or submit invoices"
+        ]
+      },
+      {
+        "key": "stock_user",
+        "label": "Stock / Warehouse User",
+        "dashboard": [
+          "Stock balance",
+          "Low stock alerts where defined",
+          "Pending receipts and transfers",
+          "Recent stock movements"
+        ],
+        "module_visibility": [
+          "items",
+          "warehouses",
+          "stock_entries",
+          "stock_reconciliation",
+          "purchase_receipts",
+          "delivery_notes"
+        ],
+        "restrictions": [
+          "Use ERPNext stock transactions and server validation",
+          "Do not directly modify stock ledger entries",
+          "Company and warehouse scope must be server-authorized"
+        ]
+      },
+      {
+        "key": "delivery_staff",
+        "label": "Delivery Staff",
+        "dashboard": [
+          "Assigned deliveries",
+          "Pickup queue",
+          "In-transit deliveries",
+          "Delivered and failed counts"
+        ],
+        "module_visibility": [
+          "assigned_deliveries",
+          "delivery_notes_if_authorized",
+          "delivery_status"
+        ],
+        "restrictions": [
+          "Expose only assigned/permitted delivery records",
+          "Status transitions must use a verified workflow or approved custom endpoint",
+          "Do not invent delivery status fields or workflow states"
+        ]
+      },
+      {
+        "key": "hr_user",
+        "label": "HR User",
+        "dashboard": [
+          "Employee count",
+          "Attendance summaries",
+          "Leave queue",
+          "HR tasks"
+        ],
+        "module_visibility": [
+          "employees",
+          "attendance",
+          "leave_applications",
+          "shifts",
+          "payroll_if_installed_and_authorized"
+        ],
+        "restrictions": [
+          "Verify HRMS app and DocTypes exist",
+          "Protect employee personal data and salary information",
+          "Payroll access must be separately authorized"
+        ]
+      },
+      {
+        "key": "manager",
+        "label": "Branch / Operations Manager",
+        "dashboard": [
+          "Authorized sales and billing KPIs",
+          "Stock availability",
+          "Delivery performance",
+          "Pending approvals"
+        ],
+        "module_visibility": [
+          "dashboard",
+          "sales",
+          "billing",
+          "stock",
+          "warehouse",
+          "delivery",
+          "reports",
+          "approvals"
+        ],
+        "restrictions": [
+          "Show company/branch/team scope only if configured in ERPNext",
+          "Approval actions require actual workflow permissions"
+        ]
+      }
+    ],
+    "implementation_requirement": "Create a permission adapter that maps real ERPNext roles/permissions to navigation and action visibility. Treat this list as proposed UX policy, not a grant of access."
+  },
+  "business_modules": [
+    {
+      "key": "dashboard",
+      "purpose": "Role-aware KPI cards and charts using verified real data.",
+      "features": [
+        "Date range selection",
+        "Company/branch filters only when supported and authorized",
+        "Clickable KPIs opening filtered records",
+        "Loading, empty, error, and stale-data states",
+        "No hardcoded or mock metrics in production"
+      ]
+    },
+    {
+      "key": "billing",
+      "purpose": "Fast counter-sales/order billing workflow.",
+      "features": [
+        "Customer and item search",
+        "Quantity, price, discount and tax display from authorized ERP logic",
+        "Draft preview and validation",
+        "Invoice creation and submission only where authorized",
+        "Payment receipt/Payment Entry if configured and authorized",
+        "Print-ready invoice/receipt",
+        "Daily closing report from verified server data"
+      ],
+      "critical_rules": [
+        "Do not compute authoritative taxes or totals independently in browser.",
+        "Do not submit invoices automatically unless explicitly designed and authorized.",
+        "Do not silently create a payment merely because an invoice was created."
+      ]
+    },
+    {
+      "key": "accounts",
+      "purpose": "Financial dashboard, accounting documents, and server-generated reports.",
+      "features": [
+        "Accounts dashboard",
+        "Sales Invoice and Purchase Invoice lists",
+        "Payment Entry",
+        "Journal Entry",
+        "Chart of Accounts",
+        "General Ledger",
+        "Trial Balance",
+        "Profit and Loss",
+        "Balance Sheet",
+        "Cash Flow",
+        "Receivables and Payables",
+        "Bank reconciliation",
+        "GST-related reports if configured"
+      ],
+      "critical_rules": [
+        "ERPNext is the source of truth for official accounting entries and financial statements.",
+        "Never directly edit ledger rows from the web UI.",
+        "Verify reports, filters, company, fiscal year, and permissions on the server.",
+        "Do not assume every report is available through the generic resource API."
+      ]
+    },
+    {
+      "key": "sales",
+      "purpose": "Customer relationship and order processing.",
+      "features": [
+        "Customers and Contacts",
+        "Quotations",
+        "Sales Orders",
+        "Sales Invoices",
+        "Status and approval views",
+        "Authorized sales reports"
+      ]
+    },
+    {
+      "key": "purchases",
+      "purpose": "Supplier and procurement workflows.",
+      "features": [
+        "Suppliers",
+        "Material Requests if used",
+        "Purchase Orders",
+        "Purchase Receipts",
+        "Purchase Invoices",
+        "Supplier outstanding reports"
+      ]
+    },
+    {
+      "key": "stock",
+      "purpose": "Inventory and stock movement workflows.",
+      "features": [
+        "Items and Item Groups",
+        "Warehouses",
+        "Stock Entry",
+        "Stock Reconciliation",
+        "Purchase Receipt",
+        "Delivery Note",
+        "Stock balance and movement reports"
+      ],
+      "critical_rules": [
+        "Use ERPNext stock transactions and server validation.",
+        "Never edit stock ledger entries directly.",
+        "Verify serial/batch and warehouse requirements from metadata and server behavior."
+      ]
+    },
+    {
+      "key": "delivery",
+      "purpose": "Delivery assignment and status operations.",
+      "features": [
+        "Assigned delivery queue",
+        "Pickup/in-transit/delivered/failed views only if these states exist in configured workflow",
+        "Proof of delivery if a supported field/process exists",
+        "Completion-rate dashboard from real records"
+      ],
+      "critical_rules": [
+        "Inspect actual custom delivery module, fields, and endpoints before implementing.",
+        "Do not invent a status field or bypass server workflow."
+      ]
+    },
+    {
+      "key": "hr",
+      "purpose": "HR operations using installed HRMS and actual permissions.",
+      "features": [
+        "Employee records",
+        "Attendance",
+        "Leave Applications",
+        "Shift Assignment if installed",
+        "Payroll only when installed and authorized"
+      ],
+      "critical_rules": [
+        "Verify HRMS DocTypes and role permissions.",
+        "Minimize employee personal data exposure."
+      ]
+    },
+    {
+      "key": "reports",
+      "purpose": "Searchable reports and chart drill-down.",
+      "features": [
+        "Report filters and date ranges",
+        "Export only where authorized",
+        "Server-generated data",
+        "Chart click-through to filtered records"
+      ]
+    },
+    {
+      "key": "settings",
+      "purpose": "User-facing preferences and authorized integration diagnostics.",
+      "features": [
+        "Current session status",
+        "API connectivity check",
+        "Version/app status if available from a verified endpoint",
+        "Display preferences",
+        "No secret display"
+      ]
+    }
+  ],
+  "ui_requirements": {
+    "global_shell": [
+      "Responsive sidebar and top navigation",
+      "Current user and company context where available",
+      "Global search constrained by permissions",
+      "Notifications only when backed by real sources",
+      "Breadcrumbs, keyboard accessibility, and mobile-friendly layout"
+    ],
+    "all_screens_must_have": [
+      "Loading state",
+      "Empty state",
+      "Error state with safe explanation",
+      "Permission-denied state",
+      "Retry control only when retry is safe",
+      "Pagination for large datasets",
+      "Accessible labels and keyboard navigation"
+    ],
+    "dashboard_visuals": [
+      "KPI cards",
+      "Line/bar charts for time trends",
+      "Status breakdown charts",
+      "Date filters",
+      "Drill-down links to authorized records"
+    ],
+    "design_rules": [
+      "Use the existing design system and components where available.",
+      "Avoid building every module as a generic raw table; add workflow-specific UI where needed.",
+      "Do not fabricate graphs from sample values in production.",
+      "Clearly distinguish Draft, Submitted, Cancelled, and custom statuses using server-returned values."
+    ]
+  },
+  "data_contracts": {
+    "response_handling": [
+      "Support Frappe response envelopes such as data and message where applicable.",
+      "Preserve structured server validation details for field-level display.",
+      "Handle empty bodies and non-JSON responses safely.",
+      "Never treat an HTTP 200 response as business success if the returned payload contains a documented application error."
+    ],
+    "list_queries": [
+      "Validate fields, filters, order_by, limit_start, and limit_page_length.",
+      "Default to bounded page size.",
+      "Never accept arbitrary upstream URLs.",
+      "Do not expose unrestricted arbitrary method calls to the browser."
+    ],
+    "write_operations": [
+      "Validate request body shape.",
+      "Use server validation and permissions.",
+      "Use idempotency for create operations only when supported and verified.",
+      "Do not blindly retry writes after timeout; first reconcile whether the server committed the operation.",
+      "Surface validation and conflict errors."
+    ],
+    "audit_logging": [
+      "Record safe event type, timestamp, route, status, duration, and correlation ID.",
+      "Never log passwords, API secrets, session cookies, authorization headers, full sensitive payloads, or employee financial data."
+    ]
+  },
+  "security": {
+    "must": [
+      "Keep API secrets and server-only credentials outside browser bundles.",
+      "Use HTTPS in production.",
+      "Use secure, HttpOnly, appropriately SameSite session cookies if a server session proxy is used.",
+      "Implement CSRF defenses appropriate to the session and deployment model.",
+      "Validate Origin/Host on state-changing same-origin routes.",
+      "Use rate limiting for login and sensitive endpoints.",
+      "Validate all inputs server-side.",
+      "Use allowlisted server routes and approved upstream paths.",
+      "Use least privilege in ERPNext.",
+      "Redact sensitive logs.",
+      "Test unauthorized access using low-privilege test users."
+    ],
+    "must_not": [
+      "Expose ERPNext API key/secret in NEXT_PUBLIC environment variables.",
+      "Store passwords or session cookies in localStorage.",
+      "Trust client-supplied role names or permission booleans.",
+      "Use client-side navigation hiding as the only security boundary.",
+      "Allow an arbitrary URL proxy or arbitrary Frappe method execution.",
+      "Create official accounting/stock ledger records outside ERPNext business APIs."
+    ],
+    "review_note": "Any previously generated starter code must be reviewed and tested before production; in particular, verify cookie parsing, CSRF behavior, session validation, proxy restrictions, and error propagation."
+  },
+  "offline_and_sync": {
+    "default": "Do not implement offline sync until requirements and conflict semantics are agreed.",
+    "if_required": [
+      "Use IndexedDB for web local persistence, not Flutter sqflite APIs.",
+      "Create an explicit outbox with operation IDs and status.",
+      "Define which DocTypes can be cached and which fields are sensitive.",
+      "Protect local dirty records from overwrite.",
+      "Define three-way conflict handling per document type.",
+      "Use idempotency or server reconciliation before retrying create operations.",
+      "Show pending, synced, failed, and conflict states.",
+      "Never queue irreversible financial or stock posting operations for silent background submission without a deliberate, audited workflow."
+    ],
+    "sdk_reference_files": [
+      "sync/pull_engine.dart",
+      "sync/pull_page_fetcher.dart",
+      "sync/pull_apply.dart",
+      "sync/push_engine.dart",
+      "sync/response_writeback.dart",
+      "sync/three_way_merge.dart",
+      "sync/idempotency_strategy.dart"
+    ]
+  },
+  "testing_plan": {
+    "phase_1_static_review": [
+      "Map every existing API call and endpoint.",
+      "Identify mock/stub data and remove only after replacing with verified live integration.",
+      "Identify secrets and unsafe browser-side requests.",
+      "Inspect dependencies, routes, components, and test setup."
+    ],
+    "phase_2_core_unit_tests": [
+      "Frappe response envelope parsing",
+      "HTTP status to error mapping",
+      "Request serialization and URL encoding",
+      "Pagination and query validation",
+      "Session expiry handling",
+      "Safe retry policy"
+    ],
+    "phase_3_integration_tests": [
+      "Login with a test account",
+      "Fetch current user/session",
+      "Load DocType metadata",
+      "List and fetch a permitted document",
+      "Create/update a harmless test document if authorized",
+      "Verify permission-denied behavior with restricted user",
+      "Verify invalid input returns a visible validation error",
+      "Verify missing custom endpoint fails visibly without mock fallback"
+    ],
+    "phase_4_business_tests": [
+      "Biller can only perform assigned billing actions",
+      "Accountant can access only permitted accounting documents/reports",
+      "Stock user cannot access unauthorized accounting or HR records",
+      "Delivery user only sees authorized/assigned delivery records",
+      "Financial totals match server reports",
+      "Stock balances match server reports",
+      "No double submit on repeated clicks or network interruption"
+    ],
+    "phase_5_release": [
+      "Run type checking, lint, unit tests, and production build.",
+      "Test on staging or with low-privilege accounts before production.",
+      "Document environment setup, rollback, and known limitations."
+    ]
+  },
+  "implementation_phases": [
+    {
+      "phase": 0,
+      "name": "Audit existing web app",
+      "exit_criteria": [
+        "Project map completed",
+        "Existing API flow documented",
+        "All current screens/modules identified",
+        "Mock data and integration gaps listed",
+        "No destructive rewrite started"
+      ]
+    },
+    {
+      "phase": 1,
+      "name": "Communication and session core",
+      "exit_criteria": [
+        "Secure login/logout/session",
+        "Shared typed API client",
+        "Response parsing and normalized errors",
+        "CSRF/session behavior verified",
+        "Integration tests pass against test account"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Metadata and permission engine",
+      "exit_criteria": [
+        "DocType metadata loading and caching",
+        "Role/permission adapter based on actual server data",
+        "Generic list and document detail APIs",
+        "Restricted-user tests pass"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Generic form and list engine",
+      "exit_criteria": [
+        "Field-type renderer",
+        "Required/read-only/hidden/link/child-table handling",
+        "Create/update validation",
+        "Pagination/search/filtering",
+        "No silent mock fallback"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Role-aware business UI",
+      "exit_criteria": [
+        "Actual roles mapped to proposed personas",
+        "Module registry and navigation",
+        "Dashboard data sources verified",
+        "Biller, accounts, stock, delivery, HR screens scoped to permissions"
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Accounts and operational workflows",
+      "exit_criteria": [
+        "Server-driven financial reports",
+        "Invoice/payment flows verified",
+        "Stock workflows use standard business APIs",
+        "No client-side ledger posting",
+        "Workflow actions authorized and audited"
+      ]
+    },
+    {
+      "phase": 6,
+      "name": "Hardening and optional offline support",
+      "exit_criteria": [
+        "Security review passed",
+        "Error/timeout/conflict tests pass",
+        "Production build passes",
+        "Offline sync implemented only if required",
+        "Deployment and rollback documentation complete"
+      ]
+    }
+  ],
+  "required_ai_outputs": [
+    "source_audit.md",
+    "endpoint_inventory.json",
+    "role_permission_matrix.json",
+    "module_inventory.json",
+    "architecture.md",
+    "implementation_plan.md",
+    "test_plan.md",
+    "security_findings.md",
+    "changed_files.md"
+  ],
+  "completion_definition": [
+    "The app uses verified live ERPNext APIs for all claimed real-data features.",
+    "There is one shared communication core rather than duplicated per-module networking.",
+    "All role assignments derive from actual server roles/permissions and explicit mapping.",
+    "Accounts and stock data come from authoritative ERPNext services/reports.",
+    "No production path silently falls back to mocks.",
+    "Authentication, permission failures, validation, network failures, and duplicate-submit risks are tested.",
+    "Type check, lint, tests, and production build pass, with results reported truthfully."
+  ]
+}

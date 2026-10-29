@@ -1,0 +1,495 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../api/client.dart';
+import '../database/daos/doctype_meta_dao.dart';
+import '../database/schema/system_columns.dart';
+import '../database/table_name.dart';
+import '../models/doc_type_meta.dart';
+import '../models/meta_resolver.dart';
+import '../models/offline_mode.dart';
+import '../models/offline_mode_notifier.dart';
+import '../utils/sdk_log.dart';
+import 'filter_parser.dart';
+import 'link_decorator.dart';
+import 'query_result.dart';
+
+typedef IsOnlineFn = bool Function();
+
+/// Background fetcher that refreshes the local store for a given query.
+/// Wired at SDK init to a single-doctype pull adapter — typically
+/// `PullEngine.fetchAndApplyOne`. Receives a copy of the request params
+/// so it can shape the upstream call (filters, paging) however it likes.
+typedef BackgroundFetcher =
+    Future<void> Function(String doctype, Map<String, Object?> params);
+
+/// The single read path for the offline-first SDK. Spec §6.1–§6.3.
+///
+/// Every offline read — `OfflineRepository.query`, Link picker,
+/// `fetch_from`, list screens, direct consumer queries — funnels through
+/// `resolve(...)`. The flow:
+///
+/// 1. **DB-first**: build a parameter-bound `SELECT` via [FilterParser]
+///    and run it. This is the value the caller sees.
+/// 2. **Decorate**: every Link / Dynamic Link value gets a
+///    `<field>__display` companion via [LinkDecorator].
+/// 3. **Background refresh**: if `isOnline()` is true, schedule a single
+///    upstream refresh via `backgroundFetch`. Concurrent calls with the
+///    same request key are deduped — only one background fetch runs.
+/// 4. Return [QueryResult] immediately; the background refresh runs in
+///    parallel and any rows it pulls land in the same `docs__<doctype>`
+///    table on the next user-driven re-read.
+///
+/// Spec §6.2 step 2 describes a "precedence" rule (group rows by
+/// `server_name ?? mobile_uuid`, prefer dirty/blocked/conflict over
+/// synced). It is a no-op against our schema: every `docs__<doctype>`
+/// row is a single logical doc — the local-edit case mutates the
+/// existing row's `sync_status` in-place rather than inserting a
+/// shadow. PullApply's UPSERT-by-server_name preserves this invariant
+/// (Spec §5.1, P3). The resolver therefore relies on row uniqueness
+/// and tags origin from `sync_status` directly.
+class UnifiedResolver {
+  final Database db;
+  final DoctypeMetaDao metaDao;
+  final IsOnlineFn isOnline;
+  final BackgroundFetcher backgroundFetch;
+  final MetaResolverFn metaResolver;
+  final OfflineModeNotifier _modeNotifier;
+  final FrappeClient? client;
+
+  /// Live offline-mode value — see [SyncService.offlineMode] for the
+  /// rationale.
+  OfflineMode get offlineMode => _modeNotifier.value;
+
+  /// Active background refreshes keyed by request hash. Holds the
+  /// in-flight Future so concurrent callers can `await` the same one
+  /// without firing a duplicate request.
+  final Map<String, Future<void>> _inflightBg = {};
+
+  UnifiedResolver({
+    required this.db,
+    required this.metaDao,
+    required this.isOnline,
+    required this.backgroundFetch,
+    required this.metaResolver,
+    OfflineMode offlineMode = const OfflineMode(
+      enabled: true,
+      isPersisted: true,
+    ),
+    OfflineModeNotifier? offlineModeNotifier,
+    this.client,
+  }) : _modeNotifier = offlineModeNotifier ?? OfflineModeNotifier(offlineMode);
+
+  Future<QueryResult<Map<String, Object?>>> resolve({
+    required String doctype,
+    List<List> filters = const [],
+    List<List> orFilters = const [],
+    String? orderBy,
+    int page = 0,
+    int pageSize = 50,
+    bool includeFailed = false,
+  }) async {
+    if (!offlineMode.enabled) {
+      // Callers compose filters for LOCAL SQLite, so they may reference
+      // columns that exist only there (`server_name`, `mobile_uuid`,
+      // `sync_status`, …). Forwarding them verbatim is exactly what makes
+      // Frappe answer `DataError - Field not permitted in query: server_name`
+      // with HTTP 417 — once per Link target per form open, via
+      // `LinkOptionService._resolveLinkTitle`.
+      //
+      // [_scheduleBackgroundRefresh] already sanitizes for the same reason,
+      // but it only guards the OFFLINE path. With offline mode disabled every
+      // resolve() returns right here, so this branch is the one most callers
+      // actually take and it was left unguarded — the sanitizer existed but
+      // was unreachable for them.
+      final serverFilters = _toServerFilters(filters);
+      final serverOrFilters = _toServerFilters(orFilters);
+      // Not expressible server-side. Answer empty rather than send a BROADER
+      // query than the caller asked for — the same call the background path
+      // makes when it skips the refresh outright.
+      if (serverFilters == null || serverOrFilters == null) {
+        return _emptyResult;
+      }
+      // An AND list that sanitizes away to nothing is NOT "no constraint" —
+      // it is a constraint that cannot be expressed server-side. Sending the
+      // query without it would answer with page 1 of the whole doctype when
+      // the caller asked for one specific row.
+      //
+      // `null` above already covers a clause on a system PARENT column. This
+      // covers the other exit: `mobile_uuid` is `continue`d (dropped) rather
+      // than returning null, because on the OR side dropping it is correct —
+      // its sibling `server_name` clause still constrains the query. On the
+      // AND side there is no sibling to fall back on, so a lone
+      // `[['mobile_uuid','=',u]]` sanitized to `[]` and went out unfiltered.
+      if (filters.isNotEmpty && serverFilters.isEmpty) {
+        return _emptyResult;
+      }
+      // An OR list that sanitizes away to nothing constrains nothing, so
+      // sending it would match every row. It only empties when every clause
+      // named `mobile_uuid`, i.e. the caller was looking for a row that has
+      // never been pushed — there is nothing to find server-side.
+      if (orFilters.isNotEmpty && serverOrFilters.isEmpty) {
+        return _emptyResult;
+      }
+      return _onlinePassthrough(
+        doctype: doctype,
+        filters: serverFilters,
+        orFilters: serverOrFilters,
+        orderBy: orderBy,
+        page: page,
+        pageSize: pageSize,
+      );
+    }
+    final meta = await metaResolver(doctype);
+    final tableName = await metaDao.tableNameFor(doctype);
+
+    // For child tables, Frappe link_filters reference Frappe's virtual
+    // `parent` field (server_name of parent). The local schema stores
+    // the parent's mobile_uuid in `parent_uuid` instead. Translate
+    // before handing off to FilterParser so the column whitelist check
+    // passes and the lookup finds both offline and synced child rows.
+    final effectiveFilters = await _maybeTranslateFilters(
+      filters,
+      meta,
+      tableName,
+    );
+    final effectiveOrFilters = await _maybeTranslateFilters(
+      orFilters,
+      meta,
+      tableName,
+    );
+
+    // Child tables (isTable=true) have no sync_status column — skip.
+    if (!includeFailed && !meta.isTable) {
+      effectiveFilters.add([
+        'sync_status',
+        'not in',
+        const ['failed'],
+      ]);
+    }
+
+    final parsed = FilterParser.toSql(
+      meta: meta,
+      tableName: tableName,
+      filters: effectiveFilters,
+      orFilters: effectiveOrFilters,
+      orderBy: orderBy,
+      page: page,
+      pageSize: pageSize,
+    );
+    final rawRows = await db.rawQuery(parsed.sql, parsed.params);
+    final rows = await LinkDecorator.decorateBatch(
+      db: db,
+      parentMeta: meta,
+      rows: rawRows,
+      targetMetaResolver: metaResolver,
+    );
+
+    if (isOnline()) {
+      _scheduleBackgroundRefresh(
+        doctype: doctype,
+        filters: filters,
+        orFilters: orFilters,
+        orderBy: orderBy,
+        page: page,
+        pageSize: pageSize,
+      );
+    }
+
+    final breakdown = <RowOrigin, int>{};
+    for (final r in rows) {
+      final status = (r['sync_status'] as String?) ?? 'synced';
+      final origin = status == 'synced' ? RowOrigin.server : RowOrigin.local;
+      breakdown[origin] = (breakdown[origin] ?? 0) + 1;
+    }
+
+    return QueryResult.ofRows(rows, pageSize, breakdown);
+  }
+
+  /// Counts rows for [doctype] in the active mode.
+  ///
+  /// - Online mode → `frappe.client.get_count` via [FrappeClient.doctype.count].
+  ///   `dirtyOnly: true` returns 0 (online mode has no outbox).
+  /// - Offline mode → `SELECT COUNT(*)` on the per-doctype `docs__<doctype>`
+  ///   table. With `dirtyOnly: true`, only rows whose `sync_status` is one
+  ///   of `dirty | sync_error | sync_blocked` are counted; otherwise rows
+  ///   with `sync_status = 'failed'` are excluded so the chip count
+  ///   matches what [resolve] returns by default.
+  ///
+  /// Returns 0 when the per-doctype table doesn't exist yet (e.g. closure
+  /// pull hasn't created it). Caller-friendly: never throws on empty state.
+  Future<int> count(String doctype, {bool dirtyOnly = false}) async {
+    if (!offlineMode.enabled) {
+      if (dirtyOnly) return 0;
+      if (client == null) {
+        throw StateError(
+          'UnifiedResolver.count: online mode requires a non-null FrappeClient.',
+        );
+      }
+      try {
+        return await client!.doctype.count(doctype);
+      } catch (e, st) {
+        debugPrint('UnifiedResolver.count($doctype) failed — $e\n$st');
+        return 0;
+      }
+    }
+
+    final tableName = await metaDao.tableNameFor(doctype);
+    final whereClause = dirtyOnly
+        ? "sync_status IN ('dirty','sync_error','sync_blocked')"
+        : "sync_status != 'failed'";
+    try {
+      final rows = await db.rawQuery(
+        'SELECT COUNT(*) AS c FROM "$tableName" WHERE $whereClause',
+      );
+      final raw = rows.isEmpty ? null : rows.first['c'];
+      if (raw is int) return raw;
+      if (raw is num) return raw.toInt();
+      return 0;
+    } on DatabaseException catch (e) {
+      // Table doesn't exist yet — pull engine creates it lazily.
+      sdkLog(
+        'UnifiedResolver.count: table "$tableName" not yet created, '
+        'returning 0 — $e',
+      );
+      return 0;
+    }
+  }
+
+  Future<QueryResult<Map<String, Object?>>> _onlinePassthrough({
+    required String doctype,
+    required List<List> filters,
+    required List<List> orFilters,
+    required String? orderBy,
+    required int page,
+    required int pageSize,
+  }) async {
+    if (client == null) {
+      throw StateError(
+        'UnifiedResolver: online mode requires a non-null FrappeClient. '
+        'Pass `client:` to the constructor when offlineMode.enabled = false.',
+      );
+    }
+    // Without `fields`, Frappe's `get_list` returns only `["name"]`, which
+    // leaves link-option labels and document-list tiles empty. Frappe
+    // accepts `["*"]` to mean "all top-level fields"
+    // (apps/frappe/frappe/desk/reportview.py:238-239) — match the offline
+    // shape (the `docs__<doctype>` mirror has every column).
+    final raw = await client!.doctype.list(
+      doctype,
+      fields: const ['*'],
+      filters: filters.map((f) => f.cast<dynamic>()).toList(),
+      orFilters: orFilters.isEmpty
+          ? null
+          : orFilters.map((f) => f.cast<dynamic>()).toList(),
+      orderBy: orderBy,
+      limitStart: page * pageSize,
+      limitPageLength: pageSize,
+    );
+    final rows = raw
+        .whereType<Map<String, dynamic>>()
+        .map((r) => Map<String, Object?>.from(r))
+        .toList();
+    return QueryResult.ofRows(
+      rows,
+      pageSize,
+      rows.isEmpty ? const {} : {RowOrigin.server: rows.length},
+    );
+  }
+
+  void _scheduleBackgroundRefresh({
+    required String doctype,
+    required List<List> filters,
+    required List<List> orFilters,
+    required String? orderBy,
+    required int page,
+    required int pageSize,
+  }) {
+    final key = _requestKey(doctype, filters, orFilters, orderBy, page);
+    _inflightBg.putIfAbsent(key, () async {
+      // Yield once to the event loop so concurrently-pending callers
+      // (parallel `resolve` calls) get a chance to register against the
+      // same in-flight key before this Future resolves and the entry is
+      // removed. Without this yield, a trivially-async backgroundFetch
+      // would complete before the second caller's putIfAbsent runs and
+      // dedup would silently fail.
+      await Future<void>.delayed(Duration.zero);
+      try {
+        // The foreground read above ran against LOCAL SQLite, so its filters
+        // may reference columns that exist only there (`server_name`,
+        // `mobile_uuid`, `sync_status`, …). Forwarding those verbatim to
+        // Frappe makes it answer `DataError - Field not permitted in query:
+        // server_name` with HTTP 417, once per Link target per form open.
+        // Sanitize first; if the query cannot be expressed server-side, skip
+        // the refresh rather than send a broader one.
+        final serverFilters = _toServerFilters(filters);
+        final serverOrFilters = _toServerFilters(orFilters);
+        if (serverFilters == null || serverOrFilters == null) return;
+        // Same asymmetry as the foreground path: an AND list that sanitizes
+        // to empty would refresh the whole doctype instead of the rows the
+        // caller asked for.
+        if (filters.isNotEmpty && serverFilters.isEmpty) return;
+        if (orFilters.isNotEmpty && serverOrFilters.isEmpty) return;
+        await backgroundFetch(doctype, {
+          'filters': serverFilters,
+          'or_filters': serverOrFilters,
+          'order_by': orderBy,
+          'limit_start': page * pageSize,
+          'limit_page_length': pageSize,
+        });
+      } catch (e, st) {
+        // Background refresh is best-effort. Failures are observed by
+        // the consumer through SyncStateNotifier (PullEngine emits its
+        // own per-doctype error state) and don't affect the foreground
+        // read that already returned.
+        debugPrint(
+          'UnifiedResolver: background refresh failed (key=$key) — $e\n$st',
+        );
+      } finally {
+        _inflightBg.remove(key);
+      }
+    });
+  }
+
+  /// Empty page, used when a local-only query cannot be expressed server-side.
+  static const QueryResult<Map<String, Object?>> _emptyResult =
+      QueryResult<Map<String, Object?>>(
+        rows: [],
+        hasMore: false,
+        returnedCount: 0,
+        originBreakdown: {},
+      );
+
+  /// Rewrites a local filter list into one Frappe will accept, or returns null
+  /// when it cannot be expressed server-side.
+  ///
+  /// * `server_name` IS the server identity — rewritten to `name`.
+  /// * `mobile_uuid` identifies a row that has not been pushed yet, so it has
+  ///   no server counterpart. The clause is dropped.
+  /// * Any other [systemParentColumnNames] entry is SDK bookkeeping with no
+  ///   server column. Returning null makes the caller skip the refresh, which
+  ///   is deliberate: silently dropping an AND clause would send a BROADER
+  ///   query than the caller asked for. See the note in `system_columns.dart`.
+  ///
+  /// A clause whose column is not local-only passes through untouched.
+  static List<List>? _toServerFilters(List<List> input) {
+    if (input.isEmpty) return const [];
+    final out = <List>[];
+    for (final clause in input) {
+      if (clause.isEmpty) continue;
+      final col = clause.first?.toString();
+      if (col == null) continue;
+      if (col == 'server_name') {
+        out.add(<dynamic>['name', ...clause.skip(1)]);
+        continue;
+      }
+      if (col == 'mobile_uuid') continue;
+      if (systemParentColumnNames.contains(col)) return null;
+      out.add(clause);
+    }
+    return out;
+  }
+
+  /// Translates Frappe's virtual `parent` column references into
+  /// `parent_uuid` lookups for child-table queries.
+  ///
+  /// Translates [filters] through [_translateParentFilters] for child-table
+  /// doctypes, or returns a shallow copy otherwise. Lifts the two
+  /// ternaries (one for `filters`, one for `orFilters`) out of [resolve]
+  /// so adding a third filter list (e.g. future `sort_by` filters) doesn't
+  /// require copy-pasting the conditional.
+  Future<List<List>> _maybeTranslateFilters(
+    List<List> input,
+    DocTypeMeta meta,
+    String tableName,
+  ) async {
+    if (meta.isTable) {
+      return _translateParentFilters(input, tableName);
+    }
+    return <List>[...input];
+  }
+
+  /// Frappe link_filters use `parent` (the server_name of the parent row),
+  /// but the local child schema stores the parent's mobile_uuid in
+  /// `parent_uuid`. For offline records the Link picker returns mobile_uuid
+  /// as the selected value, so a direct `parent_uuid = <value>` match is
+  /// tried first. For synced parents the server_name is looked up in every
+  /// distinct parent-doctype table to find the corresponding mobile_uuid.
+  Future<List<List>> _translateParentFilters(
+    List<List> filters,
+    String childTableName,
+  ) async {
+    final result = <List>[];
+    for (final f in filters) {
+      if (f.length == 3 && f[0] == 'parent') {
+        final op = (f[1] as String).toLowerCase().trim();
+        final value = f[2]?.toString() ?? '';
+        if (op == '=' && value.isNotEmpty) {
+          final resolved =
+              await _resolveParentUuid(childTableName, value) ?? value;
+          result.add(['parent_uuid', '=', resolved]);
+        } else {
+          // For operators other than '=', map column name only.
+          result.add(['parent_uuid', f[1], f[2]]);
+        }
+      } else {
+        result.add(List.from(f));
+      }
+    }
+    return result;
+  }
+
+  /// Returns the `parent_uuid` that corresponds to [value] in [childTable].
+  ///
+  /// Strategy:
+  /// 1. Direct match — value is already a mobile_uuid stored in parent_uuid.
+  /// 2. For each distinct parent_doctype in the child table, look up the
+  ///    parent's mobile_uuid via server_name = [value].
+  Future<String?> _resolveParentUuid(String childTable, String value) async {
+    // 1. Direct match (offline case: value IS the mobile_uuid).
+    final direct = await db.rawQuery(
+      'SELECT 1 FROM $childTable WHERE parent_uuid = ? LIMIT 1',
+      [value],
+    );
+    if (direct.isNotEmpty) return value;
+
+    // 2. Resolve server_name → mobile_uuid via each distinct parent doctype.
+    final parentDoctypeRows = await db.rawQuery(
+      'SELECT DISTINCT parent_doctype FROM $childTable WHERE parent_doctype IS NOT NULL',
+    );
+    for (final pdRow in parentDoctypeRows) {
+      final parentDoctype = pdRow['parent_doctype'] as String?;
+      if (parentDoctype == null || parentDoctype.isEmpty) continue;
+      final parentTable = normalizeDoctypeTableName(parentDoctype);
+      final parentRows = await db.rawQuery(
+        'SELECT mobile_uuid FROM $parentTable WHERE server_name = ? LIMIT 1',
+        [value],
+      );
+      if (parentRows.isNotEmpty) {
+        return parentRows.first['mobile_uuid'] as String?;
+      }
+    }
+    return null;
+  }
+
+  String _requestKey(
+    String doctype,
+    List<List> filters,
+    List<List> orFilters,
+    String? orderBy,
+    int page,
+  ) {
+    final raw = jsonEncode({
+      'dt': doctype,
+      'f': filters,
+      'of': orFilters,
+      'ob': orderBy,
+      'p': page,
+    });
+    return sha1.convert(utf8.encode(raw)).toString();
+  }
+}

@@ -1,0 +1,95 @@
+// Copyright (c) 2026, Bhushan Barbuddhe and contributors
+// For license information, please see license.txt
+
+import 'package:flutter/material.dart';
+import '../models/document.dart';
+import '../sdk/frappe_sdk.dart';
+import 'widgets/form_builder.dart'
+    show
+        FrappeFormBuilder,
+        FrappeFormStyle,
+        ButtonPressedCallback,
+        OnButtonPressedCallback;
+import 'widgets/default_form_style.dart';
+import 'form_screen.dart';
+
+/// Helper class for easy form rendering
+class FrappeFormRenderer {
+  final FrappeSDK sdk;
+  final FrappeFormStyle? style;
+
+  FrappeFormRenderer({required this.sdk, this.style});
+
+  /// Render a form widget for a doctype
+  ///
+  /// Example:
+  /// ```dart
+  /// final renderer = FrappeFormRenderer(sdk: sdk);
+  /// final form = await renderer.renderForm('Customer');
+  /// ```
+  Future<Widget> renderForm(
+    String doctype, {
+    Map<String, dynamic>? initialData,
+    Function(Map<String, dynamic>)? onSubmit,
+    bool readOnly = false,
+    ButtonPressedCallback? onButtonPressed,
+  }) async {
+    final meta = await sdk.meta.getMeta(doctype);
+
+    return FrappeFormBuilder(
+      meta: meta,
+      initialData: initialData,
+      onSubmit: onSubmit,
+      readOnly: readOnly,
+      linkOptionService: sdk.linkOptions,
+      style: style ?? DefaultFormStyle.standard,
+      onButtonPressed: onButtonPressed,
+      // This form has no marker map or resolver — it is the minimal host tier.
+      // The reclaim still matters: its fields can pick and discard, and the
+      // default would delete a staged file the host's own save already queued.
+      reclaimAttachment: sdk.repository.reclaimDiscardedAttachment,
+    );
+  }
+
+  /// Navigate to a form screen
+  ///
+  /// Example:
+  /// ```dart
+  /// await renderer.navigateToForm(context, 'Customer');
+  /// ```
+  Future<void> navigateToForm(
+    BuildContext context,
+    String doctype, {
+    Map<String, dynamic>? initialData,
+    Function()? onSaveSuccess,
+    OnButtonPressedCallback? onButtonPressed,
+  }) async {
+    final meta = await sdk.meta.getMeta(doctype);
+
+    // Build a Document from initialData when present so FormScreen opens
+    // in edit mode. Otherwise the form opens in create mode (document
+    // null → isNew=true).
+    final document = initialData != null && initialData['name'] != null
+        ? Document.fromResolverRow(doctype, initialData)
+        : null;
+
+    if (!context.mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => FormScreen(
+          meta: meta,
+          document: document,
+          repository: sdk.repository,
+          syncService: sdk.sync,
+          linkOptionService: sdk.linkOptions,
+          api: sdk.api,
+          onSaveSuccess: onSaveSuccess,
+          getMobileUuid: () => sdk.getMobileUuid(),
+          onButtonPressed: onButtonPressed,
+        ),
+      ),
+    );
+  }
+}

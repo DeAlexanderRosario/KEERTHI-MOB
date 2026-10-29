@@ -1,0 +1,276 @@
+import 'package:sqflite/sqflite.dart';
+import '../entities/doctype_meta_entity.dart';
+import '../table_name.dart';
+
+class DoctypeMetaDao {
+  final Database _database;
+
+  DoctypeMetaDao(this._database);
+
+  /// Resolves the persisted table_name override for [doctype], falling back
+  /// to [normalizeDoctypeTableName] if no override row exists. Replaces the
+  /// `metaDao.getTableName(doctype) ?? normalizeDoctypeTableName(doctype)`
+  /// idiom previously inlined in `UnifiedResolver`, `PullEngine`, and
+  /// `PushEngine` so a fallback-strategy change (cache, logging, alternate
+  /// naming) is made in exactly one place.
+  Future<String> tableNameFor(String doctype) async {
+    return await getTableName(doctype) ?? normalizeDoctypeTableName(doctype);
+  }
+
+  Future<DoctypeMetaEntity?> findByDoctype(String doctype) async {
+    final maps = await _database.query(
+      'doctype_meta',
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return DoctypeMetaEntity.fromDb(maps.first);
+  }
+
+  Future<List<DoctypeMetaEntity>> findAll() async {
+    final maps = await _database.query('doctype_meta');
+    return maps.map((map) => DoctypeMetaEntity.fromDb(map)).toList();
+  }
+
+  Future<List<DoctypeMetaEntity>> findByDoctypes(List<String> doctypes) async {
+    if (doctypes.isEmpty) return [];
+    final placeholders = List.filled(doctypes.length, '?').join(',');
+    final maps = await _database.query(
+      'doctype_meta',
+      where: 'doctype IN ($placeholders)',
+      whereArgs: doctypes,
+    );
+    return maps.map((map) => DoctypeMetaEntity.fromDb(map)).toList();
+  }
+
+  Future<List<DoctypeMetaEntity>> findMobileFormDoctypes() async {
+    final maps = await _database.query(
+      'doctype_meta',
+      where: 'isMobileForm = ?',
+      whereArgs: [1],
+      orderBy: 'sortOrder ASC',
+    );
+    return maps.map((map) => DoctypeMetaEntity.fromDb(map)).toList();
+  }
+
+  Future<void> insertDoctypeMeta(DoctypeMetaEntity meta) async {
+    await _database.insert(
+      'doctype_meta',
+      meta.toDb(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertDoctypeMetas(List<DoctypeMetaEntity> metas) async {
+    if (metas.isEmpty) return;
+    final batch = _database.batch();
+    for (final meta in metas) {
+      batch.insert(
+        'doctype_meta',
+        meta.toDb(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> updateDoctypeMeta(DoctypeMetaEntity meta) async {
+    await _database.update(
+      'doctype_meta',
+      meta.toDb(),
+      where: 'doctype = ?',
+      whereArgs: [meta.doctype],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> deleteDoctypeMeta(DoctypeMetaEntity meta) async {
+    await deleteByDoctype(meta.doctype);
+  }
+
+  Future<void> deleteByDoctype(String doctype) async {
+    await _database.delete(
+      'doctype_meta',
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<void> deleteAll() async {
+    await _database.delete('doctype_meta');
+  }
+
+  // ────────── v2 offline-first extensions (additive) ──────────
+
+  Future<void> setTableName(String doctype, String tableName) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'table_name': tableName},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  /// SIG-12: persists the "this parent has at least one Table or Table
+  /// MultiSelect child" flag so `OfflineRepository.doctypesWithChildren`
+  /// can answer correctly after a cold start, before the in-memory
+  /// `_childMetasByParent` cache has been populated.
+  Future<void> setIsParentWithChildren(String doctype, bool value) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'is_parent_with_children': value ? 1 : 0},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  /// Reads a single text column from `doctype_meta` for the given doctype,
+  /// returning null when the row is absent or the column is null. Shared
+  /// implementation backing every single-column getter on this DAO so
+  /// schema- or query-shape changes only need editing here.
+  Future<String?> _readStringCol(String doctype, String column) async {
+    final rows = await _database.query(
+      'doctype_meta',
+      columns: [column],
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first[column] as String?;
+  }
+
+  Future<String?> getTableName(String doctype) =>
+      _readStringCol(doctype, 'table_name');
+
+  /// Advances the mobile-config staleness stamp for [doctype].
+  ///
+  /// Call this ONLY after the schema fetch it authorises has actually
+  /// succeeded. `serverModifiedAt` is the signal `_updateMobileFormDoctypes`
+  /// uses to decide whether to re-fetch; writing it before the fetch lands
+  /// marks a doctype fresh while it still holds the old `metaJson`, and nothing
+  /// ever re-queues it.
+  Future<void> setServerModifiedAt(
+    String doctype,
+    String serverModifiedAt,
+  ) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'serverModifiedAt': serverModifiedAt},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<void> setMetaWatermark(String doctype, String watermark) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'meta_watermark': watermark},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<String?> getMetaWatermark(String doctype) =>
+      _readStringCol(doctype, 'meta_watermark');
+
+  Future<void> setDepGraphJson(String doctype, String depGraphJson) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'dep_graph_json': depGraphJson},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<String?> getDepGraphJson(String doctype) =>
+      _readStringCol(doctype, 'dep_graph_json');
+
+  Future<void> setLastOkCursor(String doctype, String cursorJson) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{
+        'last_ok_cursor': cursorJson,
+        'last_pull_ok_at': DateTime.now().toUtc().millisecondsSinceEpoch,
+      },
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<void> clearLastOkCursor(String doctype) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'last_ok_cursor': null},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<String?> getLastOkCursor(String doctype) =>
+      _readStringCol(doctype, 'last_ok_cursor');
+
+  Future<void> markEntryPoint(String doctype, bool isEntryPoint) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'is_entry_point': isEntryPoint ? 1 : 0},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  Future<void> markChildTable(String doctype, bool isChildTable) async {
+    await _database.update(
+      'doctype_meta',
+      <String, Object?>{'is_child_table': isChildTable ? 1 : 0},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+  }
+
+  /// Demotes [doctype] out of the mobile-form set (`isMobileForm` -> 0) after
+  /// the server *terminally* refuses it — a data-pull 403 (this user's role
+  /// cannot read it) or a meta 5xx (e.g. a doctype missing its server-side
+  /// controller). This stops `isOfflineBootstrapComplete` and the workspace
+  /// from requiring/showing a form the user can never load. No-op when the row
+  /// is absent or already not a mobile form.
+  ///
+  /// NOT self-healing within a session. `resyncMobileConfiguration` re-marks
+  /// every configured form and is the ONLY thing that re-promotes, but the SDK
+  /// calls it at login and `initialize()` — not per sync cycle. A doctype
+  /// demoted here therefore stays out of `getMobileFormDoctypeNames()` and out
+  /// of the workspace until the app is relaunched. Callers must classify
+  /// narrowly: see `PullEngine._isTerminalPullFailure`, which excludes the
+  /// gateway 5xx (502/503/504) for exactly this reason.
+  Future<bool> demoteFromMobileForm(String doctype) async {
+    final updated = await _database.update(
+      'doctype_meta',
+      <String, Object?>{'isMobileForm': 0},
+      where: 'doctype = ? AND isMobileForm = 1',
+      whereArgs: [doctype],
+    );
+    return updated > 0;
+  }
+
+  /// Lighter accessors for offline-first meta sync — avoid round-tripping
+  /// through [DoctypeMetaEntity] when only the JSON blob is needed.
+  Future<String?> getMetaJson(String doctype) =>
+      _readStringCol(doctype, 'metaJson');
+
+  Future<void> upsertMetaJson(String doctype, String metaJson) async {
+    final updated = await _database.update(
+      'doctype_meta',
+      <String, Object?>{'metaJson': metaJson},
+      where: 'doctype = ?',
+      whereArgs: [doctype],
+    );
+    if (updated == 0) {
+      await _database.insert('doctype_meta', <String, Object?>{
+        'doctype': doctype,
+        'metaJson': metaJson,
+        'isMobileForm': 0,
+      });
+    }
+  }
+}

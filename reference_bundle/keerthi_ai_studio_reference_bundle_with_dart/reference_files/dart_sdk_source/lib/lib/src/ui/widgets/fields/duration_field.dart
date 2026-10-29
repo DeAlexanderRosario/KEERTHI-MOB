@@ -1,0 +1,100 @@
+// Copyright (c) 2026, Bhushan Barbuddhe and contributors
+// For license information, please see license.txt
+
+import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import '../../../utils/date_helpers.dart';
+import 'base_field.dart';
+import 'field_helpers.dart';
+
+/// Widget for Duration field type (in seconds)
+class DurationField extends BaseField {
+  const DurationField({
+    super.key,
+    required super.field,
+    super.value,
+    super.onChanged,
+    super.enabled,
+    super.style,
+  });
+
+  int? _parseDuration(String? value) {
+    if (value == null || value.isEmpty) return null;
+
+    // Try parsing as integer (seconds)
+    final intValue = int.tryParse(value);
+    if (intValue != null) return intValue;
+
+    // Try parsing HH:MM:SS format
+    final parts = value.split(':');
+    if (parts.length == 3) {
+      final hours = int.tryParse(parts[0]);
+      final minutes = int.tryParse(parts[1]);
+      final seconds = int.tryParse(parts[2]);
+      if (hours != null && minutes != null && seconds != null) {
+        return hours * 3600 + minutes * 60 + seconds;
+      }
+    } else if (parts.length == 2) {
+      final minutes = int.tryParse(parts[0]);
+      final seconds = int.tryParse(parts[1]);
+      if (minutes != null && seconds != null) {
+        return minutes * 60 + seconds;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  Widget buildField(BuildContext context) {
+    int? initialSeconds;
+    if (value != null) {
+      if (value is int) {
+        initialSeconds = value;
+      } else if (value is String) {
+        initialSeconds = _parseDuration(value);
+      }
+    }
+
+    return FormBuilderTextField(
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      key: ValueKey('duration_${field.fieldname}'),
+      name: field.fieldname ?? '',
+      initialValue: initialSeconds != null
+          ? formatDurationSeconds(initialSeconds)
+          : null,
+      enabled: enabled && !field.readOnly,
+      keyboardType: TextInputType.number,
+      decoration:
+          style?.decoration ??
+          InputDecoration(
+            hintText: field.placeholder ?? 'HH:MM:SS or seconds',
+            border: const OutlineInputBorder(),
+            filled: field.readOnly,
+            fillColor: field.readOnly ? Colors.grey[200] : null,
+            helperText: 'Format: HH:MM:SS or seconds',
+          ),
+      validator: field.reqd
+          ? (value) {
+              final required = requiredValidator(value, field.displayLabel);
+              if (required != null) return required;
+              if (_parseDuration(value) == null) {
+                return 'Invalid duration format';
+              }
+              return null;
+            }
+          : (value) {
+              if (value != null &&
+                  value.isNotEmpty &&
+                  _parseDuration(value) == null) {
+                return 'Invalid duration format';
+              }
+              return null;
+            },
+      onChanged: (val) {
+        final seconds = _parseDuration(val);
+        onChanged?.call(seconds);
+      },
+    );
+  }
+}

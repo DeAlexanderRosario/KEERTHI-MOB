@@ -1,0 +1,126 @@
+{
+  "modules": [
+    {
+      "id": "dashboard",
+      "name": "Operations Dashboard",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "documentService.count('Sales Invoice')",
+        "documentService.count('Sales Order')",
+        "documentService.count('Item')",
+        "documentService.count('Customer')",
+        "documentService.count('Delivery Note')",
+        "documentService.count('Employee')",
+        "documentService.list('Sales Invoice', { limit_page_length: 5 })"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "billing",
+      "name": "Order Billing / Point of Sale",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "documentService.list('Customer')",
+        "documentService.list('Item')",
+        "documentService.create('Sales Invoice')",
+        "documentService.submit('Sales Invoice')"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "accounts",
+      "name": "Accounts & Financials",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "Sales Invoice (DocTypeList & Form)",
+        "Purchase Invoice (DocTypeList & Form)",
+        "Payment Entry (DocTypeList & Form)",
+        "Journal Entry (DocTypeList & Form)",
+        "Account / Chart of Accounts (DocTypeList & Form)",
+        "reportService.getGeneralLedger()",
+        "reportService.getTrialBalance()",
+        "reportService.getProfitAndLoss()",
+        "reportService.getBalanceSheet()"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "sales",
+      "name": "Sales & CRM",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "Customer",
+        "Quotation",
+        "Sales Order",
+        "Sales Invoice"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "purchases",
+      "name": "Purchases & Procurement",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "Supplier",
+        "Purchase Order",
+        "Purchase Receipt",
+        "Purchase Invoice"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "stock",
+      "name": "Stock & Inventory",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "Item",
+        "Warehouse",
+        "Stock Entry",
+        "Delivery Note",
+        "Purchase Receipt",
+        "reportService.getStockBalance()"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "delivery",
+      "name": "Delivery & Dispatch Operations",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "Delivery Note",
+        "Delivery Trip"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "hr",
+      "name": "Employees & HR",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "Employee",
+        "Attendance",
+        "Leave Application"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "reports",
+      "name": "Server Reports Hub",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "reportService.runReport(reportName, filters)"
+      ],
+      "mock_status": "ZERO_MOCK"
+    },
+    {
+      "id": "settings",
+      "name": "Diagnostics & Health",
+      "status": "LIVE_INTEGRATED",
+      "data_sources": [
+        "/api/erp/diagnostics/ping",
+        "/api/erp/auth/session"
+      ],
+      "mock_status": "ZERO_MOCK"
+    }
+  ]
+}

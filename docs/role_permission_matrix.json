@@ -1,0 +1,73 @@
+{
+  "matrix": [
+    {
+      "persona": "system_admin",
+      "label": "System Administrator",
+      "erp_roles": ["Administrator", "System Manager"],
+      "accessible_modules": [
+        "dashboard",
+        "billing",
+        "accounts",
+        "sales",
+        "purchases",
+        "stock",
+        "delivery",
+        "hr",
+        "reports",
+        "settings"
+      ],
+      "actions": ["create", "read", "update", "delete", "submit", "cancel", "report", "diagnostics"]
+    },
+    {
+      "persona": "order_biller",
+      "label": "Order Biller",
+      "erp_roles": ["Order Biller", "Sales User"],
+      "accessible_modules": ["dashboard", "billing", "sales", "reports", "settings"],
+      "actions": ["create_invoice", "read_customer", "read_item", "submit_invoice_if_authorized"]
+    },
+    {
+      "persona": "accountant",
+      "label": "Accountant",
+      "erp_roles": ["Accounts User", "Accounts Manager", "Auditor"],
+      "accessible_modules": ["dashboard", "accounts", "billing", "reports", "settings"],
+      "actions": [
+        "read_sales_invoice",
+        "read_purchase_invoice",
+        "create_payment_entry",
+        "create_journal_entry",
+        "run_general_ledger",
+        "run_trial_balance",
+        "run_profit_loss",
+        "run_balance_sheet"
+      ]
+    },
+    {
+      "persona": "sales_staff",
+      "label": "Sales Staff",
+      "erp_roles": ["Sales User", "Sales Manager"],
+      "accessible_modules": ["dashboard", "sales", "billing", "reports", "settings"],
+      "actions": ["read_customer", "create_quotation", "create_sales_order", "read_sales_order"]
+    },
+    {
+      "persona": "stock_user",
+      "label": "Stock / Warehouse User",
+      "erp_roles": ["Stock User", "Stock Manager"],
+      "accessible_modules": ["dashboard", "stock", "delivery", "reports", "settings"],
+      "actions": ["read_items", "create_stock_entry", "run_stock_balance", "read_warehouses"]
+    },
+    {
+      "persona": "delivery_staff",
+      "label": "Delivery Staff",
+      "erp_roles": ["Delivery User", "Delivery Staff"],
+      "accessible_modules": ["dashboard", "delivery", "settings"],
+      "actions": ["read_delivery_notes", "read_delivery_trips", "confirm_delivery"]
+    },
+    {
+      "persona": "hr_user",
+      "label": "HR User",
+      "erp_roles": ["HR User", "HR Manager"],
+      "accessible_modules": ["dashboard", "hr", "reports", "settings"],
+      "actions": ["read_employees", "create_attendance", "approve_leave"]
+    }
+  ]
+}

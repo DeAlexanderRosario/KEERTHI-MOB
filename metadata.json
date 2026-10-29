@@ -1,0 +1,8 @@
+{
+  "name": "Keerthi ERP Next Web App",
+  "description": "Production-grade, role-aware ERPNext v16 web application for Keerthi Groups with real API integration and zero mock data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

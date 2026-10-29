@@ -1,0 +1,73 @@
+// Copyright (c) 2026, Bhushan Barbuddhe and contributors
+// For license information, please see license.txt
+
+import 'package:http/http.dart' as http;
+import 'rest_helper.dart';
+import 'auth.dart';
+import 'doctype_service.dart';
+import 'document_service.dart';
+import 'attachment_service.dart';
+import 'create_idempotency.dart';
+import 'query_builder.dart';
+
+class FrappeClient {
+  final RestHelper _restHelper;
+
+  late final AuthService auth;
+  late final DoctypeService doctype;
+  late final DocumentService document;
+  late final AttachmentService attachment;
+
+  FrappeClient(
+    String baseUrl, {
+    http.Client? httpClient,
+    SessionStorage? sessionStorage,
+    Future<bool> Function()? onTokenExpired,
+    int listChildDocsPageSize = 1000,
+    int listFullDocsPageSize = 1000,
+    int listDefaultPageSize = 20,
+    OnResolvedExisting? onResolvedExisting,
+  }) : _restHelper = RestHelper(
+         baseUrl,
+         client: httpClient,
+         onTokenExpired: onTokenExpired,
+       ) {
+    auth = AuthService(_restHelper, sessionStorage: sessionStorage);
+    doctype = DoctypeService(
+      _restHelper,
+      listChildDocsPageSize: listChildDocsPageSize,
+      listFullDocsPageSize: listFullDocsPageSize,
+      listDefaultPageSize: listDefaultPageSize,
+    );
+    // Threaded, not defaulted to null-and-forgotten: without this the
+    // idempotency listener existed only on a constructor nothing in the SDK
+    // called, so a resolved create was reported to no one on every real path.
+    document = DocumentService(
+      _restHelper,
+      onResolvedExisting: onResolvedExisting,
+    );
+    attachment = AttachmentService(_restHelper);
+  }
+
+  Future<void> initialize() async {
+    await auth.initialize();
+  }
+
+  RestHelper get rest => _restHelper;
+  String get baseUrl => _restHelper.baseUrl;
+
+  /// Headers to use when loading private files (e.g. image fields).
+  Map<String, String> get requestHeaders => _restHelper.requestHeaders;
+
+  QueryBuilder doc(String doctype) {
+    return QueryBuilder(this.doctype, doctype);
+  }
+
+  Future<dynamic> call(
+    String method, {
+    Map<String, dynamic>? args,
+    String httpMethod = 'POST',
+  }) {
+    return _restHelper.call(method, args: args, httpMethod: httpMethod);
+  }
+}
