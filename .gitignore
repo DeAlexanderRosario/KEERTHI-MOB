@@ -1,3 +1,4 @@
+.aistudio/
 node_modules/
 build/
 dist/
@@ -6,11 +7,3 @@ coverage/
 *.log
 .env*
 !.env.example
-node_modules/
-dist/
-build/
-.next/
-.env
-.env.*
-!.env.example
-!.env.sample

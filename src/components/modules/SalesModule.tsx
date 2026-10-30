@@ -114,6 +114,10 @@ export function SalesModule({ initialDocType = 'Customer', initialDocName }: Sal
         doctype={activeDocType}
         docName={editingDocName}
         onBack={handleBack}
+        onNavigateDoc={(dt, dn) => {
+          setActiveDocType(dt);
+          setEditingDocName(dn);
+        }}
       />
     );
   }

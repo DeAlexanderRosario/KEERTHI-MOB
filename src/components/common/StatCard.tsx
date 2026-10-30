@@ -25,7 +25,7 @@ export function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`p-6 bg-white border border-slate-100 rounded-[28px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-all ${
+      className={`p-4 sm:p-5 md:p-6 bg-white border border-slate-100 rounded-[24px] sm:rounded-[28px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-all ${
         isClickable
           ? 'cursor-pointer hover:border-slate-200 hover:shadow-md active:scale-[0.99]'
           : ''

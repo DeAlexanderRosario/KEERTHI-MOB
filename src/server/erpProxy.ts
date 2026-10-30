@@ -60,6 +60,7 @@ function verifySameOrigin(req: Request, res: Response, next: Function) {
         originHost === expectedHost ||
         (appUrlHost && originHost === appUrlHost) ||
         originHost.endsWith('.run.app') ||
+        originHost.endsWith('.vercel.app') ||
         originHost.includes('localhost') ||
         originHost.includes('127.0.0.1');
 

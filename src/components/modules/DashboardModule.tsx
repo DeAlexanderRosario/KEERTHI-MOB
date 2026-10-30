@@ -1,18 +1,30 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Users,
-  Receipt,
-  Boxes,
-  Truck,
-  Bell,
-  RefreshCw,
-  ArrowRight,
+  Briefcase,
   TrendingUp,
+  ShoppingBag,
+  Boxes,
   CreditCard,
-  ChevronRight,
+  Truck,
+  Users,
+  Sliders,
+  RefreshCw,
+  Bell,
+  ArrowRight,
   CheckCircle2,
   Circle,
   Plus,
+  ChevronRight,
+  AlertTriangle,
+  Clock,
+  Calendar,
+  Receipt,
+  FileText,
+  DollarSign,
+  Package,
+  Layers,
+  ArrowUpRight,
+  ShieldAlert,
 } from 'lucide-react';
 import { documentService } from '../../services/documentService';
 import { authService } from '../../services/authService';
@@ -26,29 +38,159 @@ interface DashboardModuleProps {
   onOpenLogin: () => void;
 }
 
+export type DashboardTabId =
+  | 'executive'
+  | 'sales'
+  | 'purchasing'
+  | 'inventory'
+  | 'accounts'
+  | 'delivery'
+  | 'hr'
+  | 'operations';
+
+interface DashboardTabConfig {
+  id: DashboardTabId;
+  label: string;
+  shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
+
+const DASHBOARD_TABS: DashboardTabConfig[] = [
+  {
+    id: 'executive',
+    label: 'Executive Dashboard',
+    shortLabel: 'Executive',
+    icon: Briefcase,
+    description: 'High-level financial health, revenue trends, and operational pulse.',
+  },
+  {
+    id: 'sales',
+    label: 'Sales & CRM',
+    shortLabel: 'Sales',
+    icon: TrendingUp,
+    description: 'Orders, customer acquisition, pipeline conversion, and selling milestones.',
+  },
+  {
+    id: 'purchasing',
+    label: 'Purchasing & Buying',
+    shortLabel: 'Purchasing',
+    icon: ShoppingBag,
+    description: 'Procurement value, supplier relationships, purchase orders, and receipts.',
+  },
+  {
+    id: 'inventory',
+    label: 'Inventory Intelligence',
+    shortLabel: 'Inventory',
+    icon: Boxes,
+    description: 'Stock valuation, item movement, low-stock warnings, and warehouse health.',
+  },
+  {
+    id: 'accounts',
+    label: 'Accounts & Finance',
+    shortLabel: 'Accounts',
+    icon: CreditCard,
+    description: 'Receivables, payables, cash flow positions, and payment tracking.',
+  },
+  {
+    id: 'delivery',
+    label: 'Order Fulfilment',
+    shortLabel: 'Delivery',
+    icon: Truck,
+    description: 'Dispatch performance, delivery notes, transit status, and delivery trips.',
+  },
+  {
+    id: 'hr',
+    label: 'HR & Workforce',
+    shortLabel: 'Workforce',
+    icon: Users,
+    description: 'Active employee headcount, daily attendance metrics, and pending leaves.',
+  },
+  {
+    id: 'operations',
+    label: 'Daily Operations',
+    shortLabel: 'Operations',
+    icon: Sliders,
+    description: 'Priorities for today, bottlenecks requiring immediate action, and live system latency.',
+  },
+];
+
 export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModuleProps) {
   const user = authService.getUser();
 
-  const [metrics, setMetrics] = useState<{
-    invoicesCount: number;
-    ordersCount: number;
-    itemsCount: number;
-    customersCount: number;
-    deliveryCount: number;
-    pendingDeliveryCount: number;
-    pendingBillingCount: number;
-  }>({
-    invoicesCount: 0,
-    ordersCount: 0,
-    itemsCount: 0,
-    customersCount: 0,
-    deliveryCount: 0,
-    pendingDeliveryCount: 0,
-    pendingBillingCount: 0,
+  // Active dashboard selection with localStorage persistence
+  const [activeTab, setActiveTab] = useState<DashboardTabId>(() => {
+    try {
+      const saved = localStorage.getItem('keerthi_active_dashboard_tab');
+      if (saved && DASHBOARD_TABS.some((t) => t.id === saved)) {
+        return saved as DashboardTabId;
+      }
+    } catch {
+      // fallback
+    }
+    return 'executive';
   });
 
-  const [recentInvoices, setRecentInvoices] = useState<ERPDocument[]>([]);
+  const handleSelectTab = (tabId: DashboardTabId) => {
+    setActiveTab(tabId);
+    try {
+      localStorage.setItem('keerthi_active_dashboard_tab', tabId);
+    } catch {
+      // ignore
+    }
+  };
+
+  // State for all 8 dashboards
+  const [counts, setCounts] = useState<{
+    invoices: number;
+    orders: number;
+    items: number;
+    customers: number;
+    suppliers: number;
+    purchaseOrders: number;
+    purchaseInvoices: number;
+    deliveryNotes: number;
+    employees: number;
+    attendance: number;
+    leaves: number;
+    pendingDelivery: number;
+    pendingBilling: number;
+    pendingReceipts: number;
+    pendingPurchaseBills: number;
+  }>({
+    invoices: 0,
+    orders: 0,
+    items: 0,
+    customers: 0,
+    suppliers: 0,
+    purchaseOrders: 0,
+    purchaseInvoices: 0,
+    deliveryNotes: 0,
+    employees: 0,
+    attendance: 0,
+    leaves: 0,
+    pendingDelivery: 0,
+    pendingBilling: 0,
+    pendingReceipts: 0,
+    pendingPurchaseBills: 0,
+  });
+
   const [invoicesRevenue, setInvoicesRevenue] = useState<number>(0);
+  const [purchaseTotal, setPurchaseTotal] = useState<number>(0);
+  const [receivablesTotal, setReceivablesTotal] = useState<number>(0);
+  const [payablesTotal, setPayablesTotal] = useState<number>(0);
+
+  const [recentSalesOrders, setRecentSalesOrders] = useState<ERPDocument[]>([]);
+  const [recentPurchaseOrders, setRecentPurchaseOrders] = useState<ERPDocument[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<ERPDocument[]>([]);
+  const [topItems, setTopItems] = useState<ERPDocument[]>([]);
+  const [serverPing, setServerPing] = useState<{ online: boolean; latencyMs?: number }>({
+    online: true,
+  });
+
+  const [dateFilter, setDateFilter] = useState<'all' | 'year' | '30days'>('all');
+  const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>(new Array(12).fill(0));
+  const [filteredCount, setFilteredCount] = useState<number>(0);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(new Date().getMonth());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -61,7 +203,8 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
     return 'Good evening';
   }, []);
 
-  const fetchDashboardData = async (isBackground = false) => {
+  // Fetch real ERPNext data across all modules
+  const fetchDashboardData = useCallback(async (isBackground = false) => {
     if (!user) {
       setIsLoading(false);
       return;
@@ -75,73 +218,145 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
     setError(null);
 
     try {
-      // Parallel real queries from ERPNext v16
-      const [
-        invCount,
-        ordCount,
-        itmCount,
-        custCount,
-        delCount,
-        recInvoices,
-        allInvoices,
-        pendingDelCount,
-        pendingBillCount,
-      ] = await Promise.allSettled([
+      const results = await Promise.allSettled([
+        // 0: Counts
         documentService.count('Sales Invoice'),
         documentService.count('Sales Order'),
         documentService.count('Item'),
         documentService.count('Customer'),
+        documentService.count('Supplier'),
+        documentService.count('Purchase Order'),
+        documentService.count('Purchase Invoice'),
         documentService.count('Delivery Note'),
-        documentService.list('Sales Invoice', {
-          fields: ['name', 'customer', 'grand_total', 'status', 'docstatus', 'posting_date'],
+        documentService.count('Employee'),
+        documentService.count('Attendance'),
+        documentService.count('Leave Application'),
+        // 11: Pending Operational Counts
+        documentService.count('Sales Order', [['status', 'in', ['To Deliver and Bill', 'To Deliver']]]),
+        documentService.count('Sales Order', [['status', 'in', ['To Deliver and Bill', 'To Bill']]]),
+        documentService.count('Purchase Order', [['status', 'in', ['To Receive and Bill', 'To Receive']]]),
+        documentService.count('Purchase Order', [['status', 'in', ['To Receive and Bill', 'To Bill']]]),
+        // 15: Financial Lists (Filtered strictly by supported ERP parameters)
+        (() => {
+          const invFilters: any[] = [['docstatus', '=', 1]];
+          const now = new Date();
+          if (dateFilter === 'year') {
+            invFilters.push(['posting_date', '>=', `${now.getFullYear()}-01-01`]);
+          } else if (dateFilter === '30days') {
+            const d30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+            invFilters.push(['posting_date', '>=', d30]);
+          }
+          return documentService.list('Sales Invoice', {
+            fields: ['name', 'grand_total', 'docstatus', 'outstanding_amount', 'customer', 'status', 'posting_date'],
+            filters: invFilters,
+            limit_page_length: 100,
+          });
+        })(),
+        documentService.list('Purchase Invoice', {
+          fields: ['name', 'grand_total', 'docstatus', 'outstanding_amount', 'supplier', 'status', 'posting_date'],
+          filters: [['docstatus', '=', 1]],
+          limit_page_length: 100,
+        }),
+        // 17: Operational Lists
+        documentService.list('Sales Order', {
+          fields: ['name', 'customer', 'grand_total', 'status', 'transaction_date'],
+          order_by: 'creation desc',
+          limit_start: 0,
+          limit_page_length: 5,
+        }),
+        documentService.list('Purchase Order', {
+          fields: ['name', 'supplier', 'grand_total', 'status', 'transaction_date'],
           order_by: 'creation desc',
           limit_start: 0,
           limit_page_length: 5,
         }),
         documentService.list('Sales Invoice', {
-          fields: ['name', 'grand_total', 'docstatus'],
-          filters: [['docstatus', '=', 1]],
-          limit_page_length: 100,
+          fields: ['name', 'customer', 'grand_total', 'status', 'posting_date'],
+          order_by: 'creation desc',
+          limit_start: 0,
+          limit_page_length: 5,
         }),
-        documentService.count('Sales Order', [['status', 'in', ['To Deliver and Bill', 'To Deliver']]]),
-        documentService.count('Sales Order', [['status', 'in', ['To Deliver and Bill', 'To Bill']]]),
+        documentService.list('Item', {
+          fields: ['name', 'item_name', 'item_group', 'stock_uom'],
+          order_by: 'creation desc',
+          limit_start: 0,
+          limit_page_length: 5,
+        }),
       ]);
 
-      const invC = invCount.status === 'fulfilled' ? invCount.value : 0;
-      const ordC = ordCount.status === 'fulfilled' ? ordCount.value : 0;
-      const itmC = itmCount.status === 'fulfilled' ? itmCount.value : 0;
-      const custC = custCount.status === 'fulfilled' ? custCount.value : 0;
-      const delC = delCount.status === 'fulfilled' ? delCount.value : 0;
-      const pDelC = pendingDelCount.status === 'fulfilled' ? pendingDelCount.value : 0;
-      const pBillC = pendingBillCount.status === 'fulfilled' ? pendingBillCount.value : 0;
+      const val = (idx: number) => {
+        const r = results[idx];
+        return r && r.status === 'fulfilled' ? (r.value as number) : 0;
+      };
 
-      setMetrics({
-        invoicesCount: invC,
-        ordersCount: ordC,
-        itemsCount: itmC,
-        customersCount: custC,
-        deliveryCount: delC,
-        pendingDeliveryCount: pDelC,
-        pendingBillingCount: pBillC,
+      setCounts({
+        invoices: val(0),
+        orders: val(1),
+        items: val(2),
+        customers: val(3),
+        suppliers: val(4),
+        purchaseOrders: val(5),
+        purchaseInvoices: val(6),
+        deliveryNotes: val(7),
+        employees: val(8),
+        attendance: val(9),
+        leaves: val(10),
+        pendingDelivery: val(11),
+        pendingBilling: val(12),
+        pendingReceipts: val(13),
+        pendingPurchaseBills: val(14),
       });
 
-      if (recInvoices.status === 'fulfilled') {
-        setRecentInvoices(recInvoices.value);
+      // Sum revenue, outstanding & compute real monthly breakdown
+      const salesInvoicesResult = results[15];
+      if (salesInvoicesResult && salesInvoicesResult.status === 'fulfilled') {
+        const invs = salesInvoicesResult.value as ERPDocument[];
+        const totalSales = invs.reduce((acc, i) => acc + (typeof i.grand_total === 'number' ? i.grand_total : 0), 0);
+        const totalReceivables = invs.reduce(
+          (acc, i) => acc + (typeof i.outstanding_amount === 'number' ? i.outstanding_amount : 0),
+          0
+        );
+        setInvoicesRevenue(totalSales);
+        setReceivablesTotal(totalReceivables);
+        setFilteredCount(invs.length);
+
+        // Real month grouping for calendar year
+        const curYear = new Date().getFullYear();
+        const monthly = new Array(12).fill(0);
+        invs.forEach((inv) => {
+          if (inv.posting_date && typeof inv.grand_total === 'number') {
+            const d = new Date(inv.posting_date);
+            if (!isNaN(d.getTime()) && d.getFullYear() === curYear) {
+              monthly[d.getMonth()] += inv.grand_total;
+            }
+          }
+        });
+        setMonthlyRevenue(monthly);
       }
 
-      // Calculate real total from all submitted invoices (docstatus === 1)
-      if (allInvoices.status === 'fulfilled') {
-        const sum = allInvoices.value.reduce(
-          (acc, inv) => acc + (typeof inv.grand_total === 'number' ? inv.grand_total : 0),
+      const purchaseInvoicesResult = results[16];
+      if (purchaseInvoicesResult && purchaseInvoicesResult.status === 'fulfilled') {
+        const pinvs = purchaseInvoicesResult.value as ERPDocument[];
+        const totalPurch = pinvs.reduce((acc, i) => acc + (typeof i.grand_total === 'number' ? i.grand_total : 0), 0);
+        const totalPayables = pinvs.reduce(
+          (acc, i) => acc + (typeof i.outstanding_amount === 'number' ? i.outstanding_amount : 0),
           0
         );
-        setInvoicesRevenue(sum);
-      } else if (recInvoices.status === 'fulfilled') {
-        const sum = recInvoices.value.reduce(
-          (acc, inv) => acc + (typeof inv.grand_total === 'number' ? inv.grand_total : 0),
-          0
-        );
-        setInvoicesRevenue(sum);
+        setPurchaseTotal(totalPurch);
+        setPayablesTotal(totalPayables);
+      }
+
+      if (results[17] && results[17].status === 'fulfilled') {
+        setRecentSalesOrders(results[17].value as ERPDocument[]);
+      }
+      if (results[18] && results[18].status === 'fulfilled') {
+        setRecentPurchaseOrders(results[18].value as ERPDocument[]);
+      }
+      if (results[19] && results[19].status === 'fulfilled') {
+        setRecentInvoices(results[19].value as ERPDocument[]);
+      }
+      if (results[20] && results[20].status === 'fulfilled') {
+        setTopItems(results[20].value as ERPDocument[]);
       }
     } catch (err: any) {
       setError(err);
@@ -149,11 +364,24 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [user, dateFilter]);
+
+  // Ping ERPNext server for live latency
+  useEffect(() => {
+    fetch('/api/erp/diagnostics/ping')
+      .then((res) => res.json())
+      .then((data) => {
+        setServerPing({
+          online: data.status === 'online',
+          latencyMs: data.latencyMs,
+        });
+      })
+      .catch(() => setServerPing({ online: false }));
+  }, []);
 
   useEffect(() => {
     fetchDashboardData(false);
-  }, [user]);
+  }, [fetchDashboardData]);
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonthIdx = new Date().getMonth();
@@ -184,15 +412,21 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
   }
 
   // Selling progress checklist calculation
-  const hasCustomers = metrics.customersCount > 0;
-  const hasItems = metrics.itemsCount > 0;
-  const hasOrders = metrics.ordersCount > 0;
-  const hasInvoices = metrics.invoicesCount > 0;
-  const stepsDone = [hasCustomers, hasItems, hasOrders, hasInvoices].filter(Boolean).length;
+  const hasCustomers = counts.customers > 0;
+  const hasItems = counts.items > 0;
+  const hasOrders = counts.orders > 0;
+  const hasInvoices = counts.invoices > 0;
+  const sellingStepsDone = [hasCustomers, hasItems, hasOrders, hasInvoices].filter(Boolean).length;
+
+  // Buying progress checklist calculation
+  const hasSuppliers = counts.suppliers > 0;
+  const hasPurchaseOrders = counts.purchaseOrders > 0;
+  const hasPurchaseInvoices = counts.purchaseInvoices > 0;
+  const buyingStepsDone = [hasSuppliers, hasItems, hasPurchaseOrders, hasPurchaseInvoices].filter(Boolean).length;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* 1. Header Profile & Greeting Bar */}
+      {/* 1. Header Profile & Greeting Bar (inspired by mobile reference) */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-full bg-[#0f1115] text-white flex items-center justify-center font-bold text-sm shadow-xs">
@@ -212,16 +446,18 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
           <button
             onClick={() => fetchDashboardData(true)}
             disabled={isRefreshing}
-            className="w-10 h-10 rounded-full bg-white border border-slate-200/60 shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors"
+            className="w-10 h-10 rounded-full bg-white border border-slate-200/60 shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 active:scale-95 transition-all"
             title="Refresh metrics"
+            aria-label="Refresh dashboard data"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-lime-600' : ''}`} />
           </button>
 
           <button
             onClick={() => onNavigateModule('settings')}
-            className="relative w-10 h-10 rounded-full bg-white border border-slate-200/60 shadow-xs flex items-center justify-center text-slate-700 hover:text-slate-900 transition-colors"
-            title="Alerts & Notifications"
+            className="relative w-10 h-10 rounded-full bg-white border border-slate-200/60 shadow-xs flex items-center justify-center text-slate-700 hover:text-slate-900 active:scale-95 transition-all"
+            title="Diagnostics & Alerts"
+            aria-label="View alerts and system diagnostics"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
@@ -229,312 +465,966 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
         </div>
       </div>
 
-      {error && <ErrorBanner error={error} onRetry={() => fetchDashboardData(true)} />}
-
-      {/* 2. Hero Black Card (100% Real Live Metrics from ERPNext) */}
-      <div className="bg-[#0f1115] text-white rounded-[32px] p-7 sm:p-8 shadow-[0_16px_40px_rgba(0,0,0,0.16)] relative overflow-hidden">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-center">
-          {/* Left: Real Revenue */}
-          <div>
-            <span className="text-xs text-slate-400 font-medium block mb-1.5">
-              Annual Invoiced Sales
+      {/* 2. Role-Aware Multi-Dashboard Switcher */}
+      <div className="border-b border-slate-200/70 pb-2">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500">
+              Active Dashboard
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-mono tabular-nums">
-              {formatCurrency(invoicesRevenue)}
-            </div>
-            <div className="flex items-center gap-1.5 mt-2.5 text-xs font-semibold text-lime-400">
-              <span>{metrics.invoicesCount} Total Invoices</span>
-              <span className="text-slate-400 font-normal">on live server</span>
-            </div>
+            <span>·</span>
+            <span className="text-slate-700 font-medium">
+              {DASHBOARD_TABS.find((t) => t.id === activeTab)?.description}
+            </span>
           </div>
 
-          {/* Right: Operational Selling Status */}
-          <div className="sm:border-l sm:border-white/10 sm:pl-8 pt-4 sm:pt-0 border-t border-white/10">
-            <span className="text-xs text-slate-400 font-medium block mb-1.5">
-              Sales Orders Pending
-            </span>
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white mb-3">
-              {metrics.pendingDeliveryCount} To Deliver · {metrics.pendingBillingCount} To Bill
-            </div>
-
-            <div className="w-full bg-[#24272e] h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-lime-400 h-full rounded-full transition-all duration-500"
-                style={{ width: `${(stepsDone / 4) * 100}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 font-mono">
-              <span className="text-slate-300 font-medium">{stepsDone} of 4 setup steps</span>
-              <span>erp.keerthigroup.co.in</span>
-            </div>
+          <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-slate-500">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${serverPing.online ? 'bg-lime-500' : 'bg-rose-500'}`}
+            />
+            <span>{serverPing.latencyMs ? `${serverPing.latencyMs}ms` : 'online'}</span>
           </div>
+        </div>
+
+        {/* Horizontal Scrollable Segmented Control */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          {DASHBOARD_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleSelectTab(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-150 shrink-0 ${
+                  isActive
+                    ? 'bg-[#0f1115] text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-slate-200/60'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-lime-400' : 'text-slate-400'}`} />
+                <span>{tab.shortLabel}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 3. Selling Onboarding Guide (When sales orders are starting out) */}
-      {metrics.ordersCount === 0 && (
-        <div className="bg-white rounded-[32px] p-6 sm:p-7 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Selling &amp; CRM Setup
-              </span>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                Make your first sale
-              </h2>
+      {error && <ErrorBanner error={error} onRetry={() => fetchDashboardData(true)} />}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 1: EXECUTIVE DASHBOARD */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'executive' && (
+        <div className="space-y-6">
+          {/* Obsidian Hero Card (from reference image) */}
+          <div className="bg-[#0f1115] text-white rounded-[32px] p-6 sm:p-8 shadow-[0_16px_40px_rgba(0,0,0,0.16)] relative overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-center">
+              <div>
+                <span className="text-xs text-slate-400 font-medium block mb-1.5">
+                  Annual Invoiced Sales (Net)
+                </span>
+                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-mono tabular-nums">
+                  {formatCurrency(invoicesRevenue)}
+                </div>
+                <div className="flex items-center gap-1.5 mt-2.5 text-xs font-semibold text-lime-400">
+                  <span>{counts.invoices} Total Posted Invoices</span>
+                  <span className="text-slate-400 font-normal">on ERPNext</span>
+                </div>
+              </div>
+
+              <div className="sm:border-l sm:border-white/10 sm:pl-8 pt-4 sm:pt-0 border-t border-white/10">
+                <span className="text-xs text-slate-400 font-medium block mb-1.5">
+                  Sales Orders Status
+                </span>
+                <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white mb-3">
+                  {counts.pendingDelivery} To Deliver · {counts.pendingBilling} To Bill
+                </div>
+
+                <div className="w-full bg-[#24272e] h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-lime-400 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${counts.orders > 0 ? Math.min(100, (counts.invoices / counts.orders) * 100) : (sellingStepsDone / 4) * 100}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 font-mono">
+                  <span className="text-slate-300 font-medium">
+                    {counts.orders > 0 ? `${counts.orders} Total Orders` : `${sellingStepsDone} of 4 steps setup`}
+                  </span>
+                  <span>erp.keerthigroup.co.in</span>
+                </div>
+              </div>
             </div>
-            <span className="text-xs font-semibold font-mono px-3 py-1 bg-lime-50 text-lime-700 rounded-full border border-lime-200/60">
-              {stepsDone} of 4 steps done
-            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-            {/* Step 1: Customer */}
-            <div
-              onClick={() => onNavigateModule('sales', 'Customer')}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                hasCustomers
-                  ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
-                  : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900">1. Add Customer</span>
-                {hasCustomers ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <Circle className="w-4 h-4 text-slate-300" />
-                )}
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                {hasCustomers
-                  ? `${metrics.customersCount} customer(s) created.`
-                  : 'Add your first customer to bill.'}
-              </p>
-            </div>
-
-            {/* Step 2: Item */}
-            <div
+          {/* Quick Stat Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Accounts Receivable"
+              value={formatCurrency(receivablesTotal)}
+              sublabel="Outstanding from clients"
+              trend="Current"
+              trendDirection="neutral"
+              icon={<CreditCard className="w-4 h-4" />}
+              onClick={() => onNavigateModule('accounts', 'sales_invoices')}
+            />
+            <StatCard
+              label="Accounts Payable"
+              value={formatCurrency(payablesTotal)}
+              sublabel="Owed to suppliers"
+              trend="Current"
+              trendDirection="neutral"
+              icon={<DollarSign className="w-4 h-4" />}
+              onClick={() => onNavigateModule('accounts', 'purchase_invoices')}
+            />
+            <StatCard
+              label="Catalog Items"
+              value={counts.items.toLocaleString()}
+              sublabel="Stock items recorded"
+              trend="Active"
+              trendDirection="up"
+              icon={<Boxes className="w-4 h-4" />}
               onClick={() => onNavigateModule('stock', 'Item')}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                hasItems
-                  ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
-                  : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900">2. Add Item</span>
-                {hasItems ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <Circle className="w-4 h-4 text-slate-300" />
-                )}
+            />
+            <StatCard
+              label="Customers"
+              value={counts.customers.toLocaleString()}
+              sublabel="Commercial accounts"
+              trend="Active"
+              trendDirection="up"
+              icon={<Users className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Customer')}
+            />
+          </div>
+
+          {/* Revenue Flow Card with Date Filters and Verified Monthly Data */}
+          <div className="bg-white rounded-[32px] p-6 sm:p-7 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  Revenue Flow
+                </h3>
+                <span className="text-xs text-slate-400 font-medium block">
+                  Total Filtered Revenue: {formatCurrency(invoicesRevenue)} · {filteredCount} Posted Invoices
+                </span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                {hasItems
-                  ? `${metrics.itemsCount} catalog item(s) ready.`
-                  : 'Add products or raw materials.'}
-              </p>
+
+              {/* Verified ERP Date Filter Controls */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto overflow-x-auto no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setDateFilter('all')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                    dateFilter === 'all'
+                      ? 'bg-white text-slate-950 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-950'
+                  }`}
+                >
+                  All Sample (100)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDateFilter('year')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                    dateFilter === 'year'
+                      ? 'bg-white text-slate-950 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-950'
+                  }`}
+                >
+                  {new Date().getFullYear()} Year-to-Date
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDateFilter('30days')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                    dateFilter === '30days'
+                      ? 'bg-white text-slate-950 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-950'
+                  }`}
+                >
+                  Last 30 Days
+                </button>
+              </div>
             </div>
 
-            {/* Step 3: Sales Order */}
-            <div
-              onClick={() => onNavigateModule('sales', 'Sales Order')}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                hasOrders
-                  ? 'bg-emerald-50/40 border-emerald-200/70'
-                  : 'bg-white border-slate-900 shadow-xs hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900">3. Confirm Sales Order</span>
-                {hasOrders ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <Plus className="w-4 h-4 text-slate-900" />
-                )}
+            <div className="h-44 sm:h-52 w-full pt-4 flex flex-col justify-end">
+              <div className="flex items-end justify-between gap-1 sm:gap-2 h-36 px-2">
+                {(() => {
+                  const maxMonthlyRev = Math.max(...monthlyRevenue, 1);
+                  return months.map((m, idx) => {
+                    const isCurrent = idx === currentMonthIdx;
+                    const isSelected = idx === selectedMonthIndex;
+                    const monthVal = monthlyRevenue[idx] || 0;
+                    const heightPct = monthVal > 0 ? Math.max(12, Math.round((monthVal / maxMonthlyRev) * 100)) : 4;
+
+                    return (
+                      <div
+                        key={m}
+                        onClick={() => setSelectedMonthIndex(idx)}
+                        className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
+                      >
+                        <div className="w-full flex items-end justify-center h-28 relative">
+                          {isSelected && (
+                            <div className="absolute -top-7 px-2 py-0.5 bg-[#0f1115] text-white text-[10px] rounded-md font-mono whitespace-nowrap shadow-xs z-10">
+                              {formatCurrency(monthVal)}
+                            </div>
+                          )}
+                          <div
+                            style={{ height: `${heightPct}%` }}
+                            className={`w-full max-w-[28px] rounded-t-lg transition-all duration-200 ${
+                              isSelected
+                                ? 'bg-lime-400'
+                                : monthVal > 0
+                                ? 'bg-lime-500/80 hover:bg-lime-400'
+                                : 'bg-slate-100 group-hover:bg-slate-200'
+                            }`}
+                          />
+                        </div>
+                        <span
+                          className={`text-[10px] sm:text-xs font-medium ${
+                            isSelected ? 'text-slate-900 font-bold' : 'text-slate-400'
+                          }`}
+                        >
+                          {m}
+                        </span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Confirm order to deliver or bill.
-              </p>
             </div>
 
-            {/* Step 4: Invoice */}
-            <div
-              onClick={() => onNavigateModule('billing')}
-              className="p-4 rounded-2xl border bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100 transition-all cursor-pointer"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-900">4. Send Invoice</span>
-                <Plus className="w-4 h-4 text-slate-400" />
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Post official invoice &amp; get paid.
-              </p>
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Selected Month: {months[selectedMonthIndex]} ({formatCurrency(monthlyRevenue[selectedMonthIndex] || 0)})</span>
+              <span className="font-mono">Live ERPNext Source · Zero Synthetic Data</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* 4. Stat Cards Row (Live ERPNext Counts) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-        <StatCard
-          label="Total Customers"
-          value={metrics.customersCount.toLocaleString()}
-          icon={<Users className="w-4 h-4" />}
-          onClick={() => onNavigateModule('sales', 'Customer')}
-        />
-        <StatCard
-          label="Sales Orders"
-          value={metrics.ordersCount.toLocaleString()}
-          sublabel={`${metrics.pendingDeliveryCount} to deliver`}
-          icon={<Receipt className="w-4 h-4" />}
-          onClick={() => onNavigateModule('sales', 'Sales Order')}
-        />
-        <StatCard
-          label="Catalog Items"
-          value={metrics.itemsCount.toLocaleString()}
-          icon={<Boxes className="w-4 h-4" />}
-          onClick={() => onNavigateModule('stock', 'Item')}
-        />
-        <StatCard
-          label="Delivery Notes"
-          value={metrics.deliveryCount.toLocaleString()}
-          icon={<Truck className="w-4 h-4" />}
-          onClick={() => onNavigateModule('delivery')}
-        />
-      </div>
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 2: SALES & CRM DASHBOARD */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'sales' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Sales Orders"
+              value={counts.orders.toLocaleString()}
+              sublabel={`${counts.pendingDelivery} awaiting delivery`}
+              icon={<TrendingUp className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Sales Order')}
+            />
+            <StatCard
+              label="Customers"
+              value={counts.customers.toLocaleString()}
+              sublabel="Commercial accounts"
+              icon={<Users className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Customer')}
+            />
+            <StatCard
+              label="Invoices"
+              value={counts.invoices.toLocaleString()}
+              sublabel="Official bills posted"
+              icon={<Receipt className="w-4 h-4" />}
+              onClick={() => onNavigateModule('billing')}
+            />
+            <StatCard
+              label="To Bill"
+              value={counts.pendingBilling.toLocaleString()}
+              sublabel="Orders requiring invoice"
+              trend={counts.pendingBilling > 0 ? 'Pending' : 'Done'}
+              trendDirection={counts.pendingBilling > 0 ? 'down' : 'up'}
+              icon={<CreditCard className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Sales Order')}
+            />
+          </div>
 
-      {/* 5. Revenue Flow Card */}
-      <div className="bg-white rounded-[32px] p-7 sm:p-8 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-              Revenue Flow
-            </h2>
-            <div className="text-xs text-slate-400 mt-0.5">
-              Live Annual Sales:{' '}
-              <span className="font-semibold text-slate-900 font-mono">
-                {formatCurrency(invoicesRevenue)}
+          {/* 4-Step Selling Wizard */}
+          <div className="bg-white rounded-[32px] p-6 sm:p-7 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  Selling Lifecycle
+                </span>
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  Make your first sale
+                </h2>
+              </div>
+              <span className="text-xs font-semibold font-mono px-3 py-1 bg-lime-50 text-lime-700 rounded-full border border-lime-200/60">
+                {sellingStepsDone} of 4 steps completed
               </span>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-lime-500" />
-              <span className="text-slate-600 font-medium">Actual</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-              <span className="text-slate-400">Target</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Clean Responsive Monthly Bars */}
-        <div className="relative pt-6 pb-2">
-          {invoicesRevenue === 0 && (
-            <div className="text-center py-6 text-xs text-slate-400 font-mono">
-              No posted sales invoices recorded yet. Start by confirming a sales order or drafting an invoice.
-            </div>
-          )}
-
-          <div className="grid grid-cols-12 gap-1.5 sm:gap-3 items-end h-36 sm:h-44 border-b border-slate-100 px-1">
-            {months.map((m, idx) => {
-              const isSelected = idx === selectedMonthIndex;
-              const isCurrent = idx === currentMonthIdx;
-              const heightPercent = isCurrent && invoicesRevenue > 0 ? 80 : 15;
-
-              return (
-                <div
-                  key={m}
-                  onClick={() => setSelectedMonthIndex(idx)}
-                  className="flex flex-col items-center h-full justify-end cursor-pointer group"
-                >
-                  <div className="w-full max-w-[20px] sm:max-w-[28px] bg-slate-100 rounded-t-lg overflow-hidden flex flex-col justify-end transition-all">
-                    <div
-                      className={`w-full transition-all duration-300 rounded-t-lg ${
-                        isCurrent
-                          ? 'bg-lime-500 shadow-sm'
-                          : isSelected
-                          ? 'bg-slate-300'
-                          : 'bg-slate-200/80 group-hover:bg-slate-300'
-                      }`}
-                      style={{ height: `${heightPercent}%` }}
-                    />
-                  </div>
-                  <span
-                    className={`mt-2 text-[10px] sm:text-[11px] font-medium transition-colors ${
-                      isCurrent ? 'text-slate-900 font-bold' : 'text-slate-400'
-                    }`}
-                  >
-                    {m.slice(0, 3)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 6. Recent ERPNext Invoices Feed */}
-      <div className="bg-white rounded-[32px] p-7 sm:p-8 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-900 tracking-tight">
-              Recent Transactions
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Live records from erp.keerthigroup.co.in</p>
-          </div>
-          <button
-            onClick={() => onNavigateModule('accounts', 'sales_invoices')}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            <span>View Invoices</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {recentInvoices.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400">
-            No sales invoices posted yet. Ready to create your first transaction.
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100/80">
-            {recentInvoices.map((inv) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
               <div
-                key={inv.name}
-                onClick={() => onNavigateModule('accounts', 'sales_invoices', inv.name)}
-                className="py-3.5 flex items-center justify-between hover:bg-slate-50/70 cursor-pointer rounded-2xl px-2 transition-colors"
+                onClick={() => onNavigateModule('sales', 'Customer')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasCustomers
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-700 shrink-0">
-                    <Receipt className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="font-mono text-xs font-bold text-slate-900 block">
-                      {inv.name}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      {inv.customer || 'Customer'}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">1. Add Customer</span>
+                  {hasCustomers ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Circle className="w-4 h-4 text-slate-300" />}
                 </div>
-
-                <div className="text-right">
-                  <div className="font-mono text-xs font-bold text-slate-900 tabular-nums">
-                    {typeof inv.grand_total === 'number' ? formatCurrency(inv.grand_total) : '—'}
-                  </div>
-                  <div className="mt-0.5">
-                    <StatusBadge docstatus={inv.docstatus} status={inv.status} />
-                  </div>
-                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasCustomers ? `${counts.customers} customer(s) registered.` : 'Add a business or contact to bill.'}
+                </p>
               </div>
-            ))}
+
+              <div
+                onClick={() => onNavigateModule('stock', 'Item')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasItems
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">2. Add Item</span>
+                  {hasItems ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Circle className="w-4 h-4 text-slate-300" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasItems ? `${counts.items} catalog item(s) available.` : 'Products or items you sell.'}
+                </p>
+              </div>
+
+              <div
+                onClick={() => onNavigateModule('sales', 'Sales Order')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasOrders
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-white border-slate-900 shadow-xs hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">3. Confirm Sales Order</span>
+                  {hasOrders ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Plus className="w-4 h-4 text-slate-900" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasOrders ? `${counts.orders} sales order(s) entered.` : 'Confirm an order to deliver.'}
+                </p>
+              </div>
+
+              <div
+                onClick={() => onNavigateModule('billing')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasInvoices
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">4. Send Invoice</span>
+                  {hasInvoices ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Plus className="w-4 h-4 text-slate-400" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasInvoices ? `${counts.invoices} invoices posted.` : 'Post invoice & receive payment.'}
+                </p>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Recent Sales Orders */}
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900">Recent Sales Orders</h3>
+              <button
+                onClick={() => onNavigateModule('sales', 'Sales Order')}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+              >
+                <span>View all</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {recentSalesOrders.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3">No sales orders created yet.</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentSalesOrders.map((so) => (
+                  <div
+                    key={so.name}
+                    onClick={() => onNavigateModule('sales', 'Sales Order', so.name)}
+                    className="py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50/60 px-2 rounded-xl transition-colors"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">{so.customer || so.name}</span>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        {so.name} · {so.transaction_date || ''}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold font-mono text-slate-900 block">
+                        {formatCurrency(Number(so.grand_total) || 0)}
+                      </span>
+                      <span className="text-[10px] text-slate-500">{so.status || 'Draft'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 3: PURCHASING & BUYING */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'purchasing' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Purchase Orders"
+              value={counts.purchaseOrders.toLocaleString()}
+              sublabel={`${counts.pendingReceipts} to receive`}
+              icon={<ShoppingBag className="w-4 h-4" />}
+              onClick={() => onNavigateModule('purchases', 'Purchase Order')}
+            />
+            <StatCard
+              label="Suppliers"
+              value={counts.suppliers.toLocaleString()}
+              sublabel="Active vendors"
+              icon={<Users className="w-4 h-4" />}
+              onClick={() => onNavigateModule('purchases', 'Supplier')}
+            />
+            <StatCard
+              label="Purchase Invoices"
+              value={counts.purchaseInvoices.toLocaleString()}
+              sublabel="Vendor bills registered"
+              icon={<Receipt className="w-4 h-4" />}
+              onClick={() => onNavigateModule('accounts', 'purchase_invoices')}
+            />
+            <StatCard
+              label="Total Purchase Value"
+              value={formatCurrency(purchaseTotal)}
+              sublabel="Official bills"
+              icon={<DollarSign className="w-4 h-4" />}
+            />
+          </div>
+
+          {/* 4-Step Procurement Wizard */}
+          <div className="bg-white rounded-[32px] p-6 sm:p-7 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  Procurement Workflow
+                </span>
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  Order from your suppliers
+                </h2>
+              </div>
+              <span className="text-xs font-semibold font-mono px-3 py-1 bg-lime-50 text-lime-700 rounded-full border border-lime-200/60">
+                {buyingStepsDone} of 4 steps completed
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+              <div
+                onClick={() => onNavigateModule('purchases', 'Supplier')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasSuppliers
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">1. Add Supplier</span>
+                  {hasSuppliers ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Circle className="w-4 h-4 text-slate-300" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasSuppliers ? `${counts.suppliers} supplier(s) recorded.` : 'A business or person you buy from.'}
+                </p>
+              </div>
+
+              <div
+                onClick={() => onNavigateModule('stock', 'Item')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasItems
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">2. Add Item</span>
+                  {hasItems ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Circle className="w-4 h-4 text-slate-300" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasItems ? `${counts.items} item(s) cataloged.` : 'Item or material you buy.'}
+                </p>
+              </div>
+
+              <div
+                onClick={() => onNavigateModule('purchases', 'Purchase Order')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasPurchaseOrders
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-white border-slate-900 shadow-xs hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">3. Place PO</span>
+                  {hasPurchaseOrders ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Plus className="w-4 h-4 text-slate-900" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasPurchaseOrders ? `${counts.purchaseOrders} PO(s) placed.` : 'Send formal purchase order.'}
+                </p>
+              </div>
+
+              <div
+                onClick={() => onNavigateModule('accounts', 'purchase_invoices')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  hasPurchaseInvoices
+                    ? 'bg-emerald-50/40 border-emerald-200/70 hover:bg-emerald-50/70'
+                    : 'bg-[#f8f9fa] border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-900">4. Enter Bill</span>
+                  {hasPurchaseInvoices ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Plus className="w-4 h-4 text-slate-400" />}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {hasPurchaseInvoices ? `${counts.purchaseInvoices} bill(s) registered.` : 'Record invoice & pay supplier.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Purchase Orders */}
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900">Recent Purchase Orders</h3>
+              <button
+                onClick={() => onNavigateModule('purchases', 'Purchase Order')}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+              >
+                <span>View all</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {recentPurchaseOrders.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3">No purchase orders created yet.</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentPurchaseOrders.map((po) => (
+                  <div
+                    key={po.name}
+                    onClick={() => onNavigateModule('purchases', 'Purchase Order', po.name)}
+                    className="py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50/60 px-2 rounded-xl transition-colors"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">{po.supplier || po.name}</span>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        {po.name} · {po.transaction_date || ''}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold font-mono text-slate-900 block">
+                        {formatCurrency(Number(po.grand_total) || 0)}
+                      </span>
+                      <span className="text-[10px] text-slate-500">{po.status || 'Draft'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 4: INVENTORY INTELLIGENCE */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'inventory' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Catalog Items"
+              value={counts.items.toLocaleString()}
+              sublabel="Active product master"
+              icon={<Boxes className="w-4 h-4" />}
+              onClick={() => onNavigateModule('stock', 'Item')}
+            />
+            <StatCard
+              label="Delivery Notes"
+              value={counts.deliveryNotes.toLocaleString()}
+              sublabel="Stock shipments"
+              icon={<Truck className="w-4 h-4" />}
+              onClick={() => onNavigateModule('delivery')}
+            />
+            <StatCard
+              label="Pending To Deliver"
+              value={counts.pendingDelivery.toLocaleString()}
+              sublabel="Orders awaiting dispatch"
+              trend={counts.pendingDelivery > 0 ? 'Action Needed' : 'Clear'}
+              trendDirection={counts.pendingDelivery > 0 ? 'down' : 'up'}
+              icon={<Package className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Sales Order')}
+            />
+            <StatCard
+              label="Pending Receipts"
+              value={counts.pendingReceipts.toLocaleString()}
+              sublabel="Supplier shipments inbound"
+              icon={<ShoppingBag className="w-4 h-4" />}
+              onClick={() => onNavigateModule('purchases', 'Purchase Order')}
+            />
+          </div>
+
+          {/* Catalog Snapshot */}
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Inventory Items Master</h3>
+                <span className="text-xs text-slate-400">Recent catalog products in ERPNext</span>
+              </div>
+              <button
+                onClick={() => onNavigateModule('stock', 'Item')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Item</span>
+              </button>
+            </div>
+
+            {topItems.length === 0 ? (
+              <p className="text-xs text-slate-400 py-4">No items recorded in ERPNext yet.</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {topItems.map((itm) => (
+                  <div
+                    key={itm.name}
+                    onClick={() => onNavigateModule('stock', 'Item', itm.name)}
+                    className="py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50/60 px-2 rounded-xl transition-colors"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">{itm.item_name || itm.name}</span>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        Code: {itm.name} · Group: {itm.item_group || 'All'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-medium text-slate-700 block">{itm.stock_uom || 'Nos'}</span>
+                      <span className="text-[10px] text-slate-400">Inspect ledger →</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 5: ACCOUNTS & FINANCE */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'accounts' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Accounts Receivable"
+              value={formatCurrency(receivablesTotal)}
+              sublabel="Outstanding invoices"
+              trend={receivablesTotal > 0 ? 'Uncollected' : 'Settled'}
+              trendDirection={receivablesTotal > 0 ? 'down' : 'up'}
+              icon={<CreditCard className="w-4 h-4" />}
+              onClick={() => onNavigateModule('accounts', 'sales_invoices')}
+            />
+            <StatCard
+              label="Accounts Payable"
+              value={formatCurrency(payablesTotal)}
+              sublabel="Owed to suppliers"
+              icon={<DollarSign className="w-4 h-4" />}
+              onClick={() => onNavigateModule('accounts', 'purchase_invoices')}
+            />
+            <StatCard
+              label="Sales Invoices"
+              value={counts.invoices.toLocaleString()}
+              sublabel="Total billing documents"
+              icon={<Receipt className="w-4 h-4" />}
+              onClick={() => onNavigateModule('billing')}
+            />
+            <StatCard
+              label="Purchase Invoices"
+              value={counts.purchaseInvoices.toLocaleString()}
+              sublabel="Total supplier bills"
+              icon={<FileText className="w-4 h-4" />}
+              onClick={() => onNavigateModule('accounts', 'purchase_invoices')}
+            />
+          </div>
+
+          {/* Quick Ledger Navigation */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              onClick={() => onNavigateModule('accounts', 'sales_invoices')}
+              className="p-5 bg-white border border-slate-100 rounded-[24px] text-left hover:border-slate-300 transition-all shadow-xs"
+            >
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                <Receipt className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-bold text-slate-900 block">Sales Invoices</span>
+              <p className="text-[11px] text-slate-400 mt-1">Review posted billing and customer balances.</p>
+            </button>
+
+            <button
+              onClick={() => onNavigateModule('accounts', 'purchase_invoices')}
+              className="p-5 bg-white border border-slate-100 rounded-[24px] text-left hover:border-slate-300 transition-all shadow-xs"
+            >
+              <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                <FileText className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-bold text-slate-900 block">Purchase Invoices</span>
+              <p className="text-[11px] text-slate-400 mt-1">Manage vendor bills and payment schedules.</p>
+            </button>
+
+            <button
+              onClick={() => onNavigateModule('accounts', 'payment_entries')}
+              className="p-5 bg-white border border-slate-100 rounded-[24px] text-left hover:border-slate-300 transition-all shadow-xs"
+            >
+              <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                <CreditCard className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-bold text-slate-900 block">Payment Entries</span>
+              <p className="text-[11px] text-slate-400 mt-1">Record incoming collections & vendor disbursements.</p>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 6: DELIVERY & FULFILMENT */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'delivery' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Delivery Notes"
+              value={counts.deliveryNotes.toLocaleString()}
+              sublabel="Dispatches recorded"
+              icon={<Truck className="w-4 h-4" />}
+              onClick={() => onNavigateModule('delivery')}
+            />
+            <StatCard
+              label="Pending To Deliver"
+              value={counts.pendingDelivery.toLocaleString()}
+              sublabel="Sales orders waiting"
+              trend={counts.pendingDelivery > 0 ? 'Backlog' : 'Clear'}
+              trendDirection={counts.pendingDelivery > 0 ? 'down' : 'up'}
+              icon={<Package className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Sales Order')}
+            />
+            <StatCard
+              label="Customers"
+              value={counts.customers.toLocaleString()}
+              sublabel="Destination accounts"
+              icon={<Users className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Customer')}
+            />
+            <StatCard
+              label="Catalog Items"
+              value={counts.items.toLocaleString()}
+              sublabel="Deliverable items"
+              icon={<Boxes className="w-4 h-4" />}
+              onClick={() => onNavigateModule('stock', 'Item')}
+            />
+          </div>
+
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Fulfilment Hub</h3>
+                <span className="text-xs text-slate-400">Generate dispatch notes and monitor orders</span>
+              </div>
+              <button
+                onClick={() => onNavigateModule('delivery')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0f1115] hover:bg-black rounded-full transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 text-lime-400" />
+                <span>New Delivery Note</span>
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 text-xs text-slate-600 leading-relaxed">
+              Delivery Notes deduct inventory from your specified warehouse upon posting. Ensure all Sales Orders are confirmed prior to dispatching items.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 7: HR & WORKFORCE */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'hr' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Active Employees"
+              value={counts.employees.toLocaleString()}
+              sublabel="Staff profiles recorded"
+              icon={<Users className="w-4 h-4" />}
+              onClick={() => onNavigateModule('hr')}
+            />
+            <StatCard
+              label="Attendance Records"
+              value={counts.attendance.toLocaleString()}
+              sublabel="Historical entries"
+              icon={<Calendar className="w-4 h-4" />}
+              onClick={() => onNavigateModule('hr')}
+            />
+            <StatCard
+              label="Leave Applications"
+              value={counts.leaves.toLocaleString()}
+              sublabel="Pending & processed"
+              icon={<Clock className="w-4 h-4" />}
+              onClick={() => onNavigateModule('hr')}
+            />
+            <StatCard
+              label="HR Health"
+              value={counts.employees > 0 ? 'Active' : 'Setup'}
+              sublabel="Workforce module"
+              icon={<ShieldAlert className="w-4 h-4" />}
+              onClick={() => onNavigateModule('hr')}
+            />
+          </div>
+
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Workforce Overview</h3>
+                <span className="text-xs text-slate-400">Employee records and daily attendance tracking</span>
+              </div>
+              <button
+                onClick={() => onNavigateModule('hr')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0f1115] hover:bg-black rounded-full transition-colors"
+              >
+                <span>Open HR Workspace</span>
+                <ChevronRight className="w-3.5 h-3.5 text-lime-400" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 text-xs text-slate-600 leading-relaxed">
+              Access the Employee Directory, track daily shifts, record check-ins, and approve leave applications in accordance with company policy.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 8: DAILY OPERATIONS */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'operations' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            <StatCard
+              label="Orders To Deliver"
+              value={counts.pendingDelivery.toLocaleString()}
+              sublabel="Awaiting shipment"
+              trend={counts.pendingDelivery > 0 ? 'Priority' : 'Good'}
+              trendDirection={counts.pendingDelivery > 0 ? 'down' : 'up'}
+              icon={<Truck className="w-4 h-4" />}
+              onClick={() => onNavigateModule('sales', 'Sales Order')}
+            />
+            <StatCard
+              label="Orders To Bill"
+              value={counts.pendingBilling.toLocaleString()}
+              sublabel="Awaiting billing"
+              trend={counts.pendingBilling > 0 ? 'Priority' : 'Good'}
+              trendDirection={counts.pendingBilling > 0 ? 'down' : 'up'}
+              icon={<Receipt className="w-4 h-4" />}
+              onClick={() => onNavigateModule('billing')}
+            />
+            <StatCard
+              label="PO Receipts Pending"
+              value={counts.pendingReceipts.toLocaleString()}
+              sublabel="Goods pending receipt"
+              icon={<ShoppingBag className="w-4 h-4" />}
+              onClick={() => onNavigateModule('purchases', 'Purchase Order')}
+            />
+            <StatCard
+              label="Live Latency"
+              value={serverPing.latencyMs ? `${serverPing.latencyMs}ms` : 'Online'}
+              sublabel="erp.keerthigroup.co.in"
+              icon={<RefreshCw className="w-4 h-4" />}
+              onClick={() => onNavigateModule('settings')}
+            />
+          </div>
+
+          {/* Actionable Exceptions List */}
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
+            <h3 className="text-sm font-bold text-slate-900">Today's Actionable Priorities</h3>
+
+            <div className="space-y-3">
+              {counts.pendingDelivery > 0 && (
+                <div
+                  onClick={() => onNavigateModule('sales', 'Sales Order')}
+                  className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 flex items-center justify-between cursor-pointer hover:bg-amber-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">
+                        {counts.pendingDelivery} Sales Orders waiting to be delivered
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Generate Delivery Notes to dispatch stock to customers.
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-600 shrink-0" />
+                </div>
+              )}
+
+              {counts.pendingBilling > 0 && (
+                <div
+                  onClick={() => onNavigateModule('billing')}
+                  className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/80 flex items-center justify-between cursor-pointer hover:bg-blue-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Receipt className="w-4 h-4 text-blue-600 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">
+                        {counts.pendingBilling} Sales Orders waiting to be billed
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Create Sales Invoices to request customer payment.
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-blue-600 shrink-0" />
+                </div>
+              )}
+
+              {counts.pendingReceipts > 0 && (
+                <div
+                  onClick={() => onNavigateModule('purchases', 'Purchase Order')}
+                  className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200/80 flex items-center justify-between cursor-pointer hover:bg-purple-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <ShoppingBag className="w-4 h-4 text-purple-600 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">
+                        {counts.pendingReceipts} Purchase Orders awaiting goods receipt
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Record Purchase Receipts upon arrival at warehouse.
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-purple-600 shrink-0" />
+                </div>
+              )}
+
+              {counts.pendingDelivery === 0 && counts.pendingBilling === 0 && counts.pendingReceipts === 0 && (
+                <div className="p-6 text-center text-slate-400 text-xs">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+                  <span>No operational bottlenecks detected today! All orders and dispatches are up to date.</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

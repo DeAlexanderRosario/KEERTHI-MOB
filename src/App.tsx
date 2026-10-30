@@ -47,8 +47,8 @@ export default function App() {
     setIsMobileNavOpen(false);
   };
 
-  // If user explicitly chose the separate login page
-  if (viewMode === 'login') {
+  // Show the Splash / Login experience if user is not authenticated or explicitly chose login
+  if (!isInitializing && (!currentUser || viewMode === 'login')) {
     return (
       <LoginPage
         onSuccess={() => {
@@ -70,10 +70,10 @@ export default function App() {
       />
 
       {/* Mobile Top Bar (Quick Breadcrumb & Drawer Opener) */}
-      <div className="md:hidden flex items-center justify-between px-4 py-2 bg-white/90 border-b border-slate-200/80 backdrop-blur-xs">
+      <div className="md:hidden flex items-center justify-between px-4 py-2.5 bg-white/95 border-b border-slate-200/70 backdrop-blur-md sticky top-16 z-20">
         <button
           onClick={() => setIsMobileNavOpen(true)}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg active:scale-95 transition-all"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full active:scale-95 transition-all"
         >
           <Menu className="w-3.5 h-3.5" />
           <span>All Modules</span>
@@ -86,7 +86,7 @@ export default function App() {
           {!currentUser && (
             <button
               onClick={() => setViewMode('login')}
-              className="text-[11px] text-lime-700 font-semibold px-2 py-0.5 bg-lime-50 rounded-full border border-lime-200"
+              className="text-[11px] text-slate-900 font-semibold px-2.5 py-1 bg-lime-400 rounded-full shadow-xs active:scale-95 transition-all"
             >
               Sign In
             </button>
@@ -103,7 +103,7 @@ export default function App() {
           onCloseMobile={() => setIsMobileNavOpen(false)}
         />
 
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 lg:p-8 max-w-7xl mx-auto w-full pb-28 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 lg:p-8 max-w-7xl mx-auto w-full pb-[max(8rem,calc(env(safe-area-inset-bottom)+6.5rem))] md:pb-8">
           {activeModuleId === 'dashboard' && (
             <DashboardModule
               onNavigateModule={handleNavigate}

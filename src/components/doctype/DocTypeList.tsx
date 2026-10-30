@@ -54,7 +54,12 @@ export function DocTypeList({
   const [sortField, setSortField] = useState<string>('modified');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return 'cards';
+    }
+    return 'table';
+  });
 
   const activeRequestIdRef = useRef<number>(0);
   const hasLoadedOnceRef = useRef<boolean>(false);
