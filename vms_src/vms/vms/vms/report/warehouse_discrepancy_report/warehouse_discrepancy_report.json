@@ -1,0 +1,9 @@
+{
+  "doctype": "Report",
+  "name": "Warehouse Discrepancy Report",
+  "report_name": "Warehouse Discrepancy Report",
+  "report_type": "Script Report",
+  "is_standard": "Yes",
+  "module": "VMS",
+  "ref_doctype": "Warehouse Discrepancy"
+}

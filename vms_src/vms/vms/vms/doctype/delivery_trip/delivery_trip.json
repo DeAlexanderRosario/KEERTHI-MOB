@@ -1,0 +1,133 @@
+{
+  "name": "Delivery Trip",
+  "doctype": "DocType",
+  "module": "VMS",
+  "is_submittable": 1,
+  "autoname": "format:TRIP-.YYYY.-.#####",
+  "naming_rule": "Expression",
+  "fields": [
+    {
+      "fieldname": "vehicle",
+      "label": "Vehicle",
+      "fieldtype": "Link",
+      "options": "Vehicle",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "driver",
+      "label": "Driver",
+      "fieldtype": "Link",
+      "options": "Driver",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "route",
+      "label": "Route",
+      "fieldtype": "Link",
+      "options": "Route",
+      "reqd": 1
+    },
+    {
+      "fieldname": "vehicle_allocation",
+      "label": "Vehicle Allocation",
+      "fieldtype": "Link",
+      "options": "Vehicle Allocation"
+    },
+    {
+      "fieldname": "col_break1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Draft\nPending Approval\nDispatched\nIn Transit\nCompleted\nCancelled",
+      "default": "Draft",
+      "allow_on_submit": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "departure_time",
+      "label": "Scheduled Departure",
+      "fieldtype": "Datetime",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actual_departure",
+      "label": "Actual Departure",
+      "fieldtype": "Datetime",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "actual_completion",
+      "label": "Actual Completion",
+      "fieldtype": "Datetime",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "is_delayed",
+      "label": "Is Delayed",
+      "fieldtype": "Check",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_stops",
+      "label": "Stops & Customer Route",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "stops",
+      "label": "Stops",
+      "fieldtype": "Table",
+      "options": "Delivery Trip Stop",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_items",
+      "label": "Allocated Items",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "items",
+      "label": "Items",
+      "fieldtype": "Table",
+      "options": "Delivery Trip Item",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Dispatcher",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "role": "Fleet Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "role": "Driver",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ]
+}

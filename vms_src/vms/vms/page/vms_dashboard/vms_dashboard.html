@@ -1,0 +1,256 @@
+<div class="vms-dashboard-wrapper">
+  <!-- Top Operational Header & KPI Row -->
+  <div class="vms-header-row">
+    <div class="vms-header-left">
+      <div class="vms-user-welcome">
+        <span class="vms-welcome-sub">Welcome back,</span>
+        <span class="vms-user-name" id="vms-user-display">Operations Manager</span>
+      </div>
+      <div class="vms-company-pill">
+        <img class="vms-company-logo" src="/assets/vms/images/vms_logo.svg" alt="" aria-hidden="true">
+        <span class="vms-company-name" id="vms-company-name">Keerthi Groups Hardware</span>
+      </div>
+    </div>
+
+    <!-- Quick Summary KPIs from Reference Layout -->
+    <div class="vms-kpi-summary-group">
+      <div class="vms-kpi-pill" id="kpi-ontime-card" role="link" tabindex="0" title="View trips currently in transit">
+        <div class="vms-kpi-icon-wrap"><i class="fa fa-clock-o text-success"></i></div>
+        <div class="vms-kpi-info">
+          <div class="vms-kpi-val-row">
+            <span class="vms-kpi-value" id="kpi-ontime-val">--</span>
+            <span class="vms-kpi-trend text-success" id="kpi-ontime-sub">Live</span>
+          </div>
+          <span class="vms-kpi-label">Trips in transit</span>
+        </div>
+      </div>
+
+      <div class="vms-kpi-pill" id="kpi-avgkm-card" title="Click to view Route Masters">
+        <div class="vms-kpi-icon-wrap"><i class="fa fa-truck text-muted"></i></div>
+        <div class="vms-kpi-info">
+          <div class="vms-kpi-val-row">
+            <span class="vms-kpi-value" id="kpi-avgkm-val">--</span>
+            <span class="vms-kpi-unit">km</span>
+          </div>
+          <span class="vms-kpi-label">Average planned route</span>
+        </div>
+      </div>
+
+      <div class="vms-kpi-pill" id="kpi-orders-card" role="link" tabindex="0" title="View completed delivery trips">
+        <div class="vms-kpi-icon-wrap"><i class="fa fa-check-circle text-primary"></i></div>
+        <div class="vms-kpi-info">
+          <div class="vms-kpi-val-row">
+            <span class="vms-kpi-value" id="kpi-orders-val">--</span>
+          </div>
+          <span class="vms-kpi-label">Completed trips</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="vms-header-actions">
+      <button class="btn btn-sm btn-default" id="vms-btn-refresh" title="Refresh Live Records">
+        <i class="fa fa-refresh"></i> Refresh
+      </button>
+      <div class="dropdown inline-block">
+        <button class="btn btn-sm btn-primary dropdown-toggle vms-btn-download" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-download"></i> Download <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-right">
+          <li><a href="#" id="vms-export-trips"><i class="fa fa-file-text-o"></i> Active Trips Manifest</a></li>
+          <li><a href="#" id="vms-export-allocations"><i class="fa fa-list-alt"></i> Allocation Queue</a></li>
+          <li><a href="#" id="vms-export-discrepancies"><i class="fa fa-exclamation-triangle"></i> Warehouse Discrepancies</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <section class="vms-operations-pulse" aria-label="Operational workload">
+    <button type="button" class="vms-pulse-item" id="vms-pulse-allocations">
+      <span class="vms-pulse-icon"><i class="fa fa-list-alt" aria-hidden="true"></i></span>
+      <span class="vms-pulse-copy"><strong id="vms-pending-allocation-count">--</strong><small>Pending allocations</small></span>
+      <i class="fa fa-angle-right vms-pulse-arrow" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="vms-pulse-item" id="vms-pulse-collections">
+      <span class="vms-pulse-icon"><i class="fa fa-inr" aria-hidden="true"></i></span>
+      <span class="vms-pulse-copy"><strong id="vms-pending-collection-count">--</strong><small>Collections to review</small></span>
+      <i class="fa fa-angle-right vms-pulse-arrow" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="vms-pulse-item" id="vms-pulse-discrepancies">
+      <span class="vms-pulse-icon vms-pulse-icon-warning"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>
+      <span class="vms-pulse-copy"><strong id="vms-open-discrepancy-count">--</strong><small>Open discrepancies</small></span>
+      <i class="fa fa-angle-right vms-pulse-arrow" aria-hidden="true"></i>
+    </button>
+  </section>
+
+  <!-- Main Dashboard Grid -->
+  <div class="vms-grid-container">
+    <!-- Left Column: Fleet Efficiency Donut Card -->
+    <div class="vms-card vms-fleet-efficiency-card">
+      <div class="vms-card-header">
+        <h4 class="vms-card-title">Fleet efficiency</h4>
+        <span class="vms-card-tag">Active Fleet</span>
+      </div>
+      <div class="vms-card-subheading">
+        <span class="vms-large-stat" id="vms-fleet-util-pct">--%</span>
+        <span class="vms-trend-pill" id="vms-fleet-trend-label">Active Utilization</span>
+      </div>
+      <div class="vms-donut-section">
+        <div class="vms-donut-chart-container">
+          <svg class="vms-donut-svg" viewBox="0 0 160 160" width="140" height="140">
+            <circle cx="80" cy="80" r="60" fill="transparent" stroke="#e2e8f0" stroke-width="18" />
+            <circle id="vms-donut-active" cx="80" cy="80" r="60" fill="transparent" stroke="#20d52e" stroke-width="18" stroke-dasharray="0 377" transform="rotate(-90 80 80)" />
+            <circle id="vms-donut-avail" cx="80" cy="80" r="60" fill="transparent" stroke="#eab308" stroke-width="18" stroke-dasharray="0 377" transform="rotate(-90 80 80)" />
+            <circle id="vms-donut-maint" cx="80" cy="80" r="60" fill="transparent" stroke="#ef4444" stroke-width="18" stroke-dasharray="0 377" transform="rotate(-90 80 80)" />
+            <text x="80" y="76" text-anchor="middle" class="vms-donut-center-val" id="vms-donut-total">--</text>
+            <text x="80" y="94" text-anchor="middle" class="vms-donut-center-lbl">Total fleet</text>
+          </svg>
+        </div>
+        <div class="vms-donut-legend">
+          <div class="vms-legend-item">
+            <span class="vms-legend-dot vms-dot-green"></span>
+            <span class="vms-legend-label">on the move</span>
+            <span class="vms-legend-count" id="vms-count-onthemove">--</span>
+          </div>
+          <div class="vms-legend-item">
+            <span class="vms-legend-dot vms-dot-yellow"></span>
+            <span class="vms-legend-label">unutilized / available</span>
+            <span class="vms-legend-count" id="vms-count-unutilized">--</span>
+          </div>
+          <div class="vms-legend-item">
+            <span class="vms-legend-dot vms-dot-red"></span>
+            <span class="vms-legend-label" id="vms-maintenance-label">in maintenance</span>
+            <span class="vms-legend-count" id="vms-count-maintenance">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Column: Vehicles on the Road Card -->
+    <div class="vms-card vms-vehicles-road-card">
+      <div class="vms-card-header">
+        <h4 class="vms-card-title"><span class="vms-status-indicator-live"></span> Vehicles on the road</h4>
+        <button class="btn btn-xs btn-primary" id="vms-btn-track-all">
+          <i class="fa fa-map-marker"></i> Open Dispatch Queue
+        </button>
+      </div>
+      <div class="vms-card-subheading">
+        <span class="vms-large-stat" id="vms-active-trips-heading">--</span>
+        <span class="vms-trend-pill" id="vms-active-trips-sub">Active Trips In Transit</span>
+      </div>
+      <div class="vms-truck-visual-row">
+        <div class="vms-truck-graphic-box">
+          <img src="/assets/vms/images/delivery_truck.svg" alt="Commercial Vehicle" class="vms-truck-img" id="vms-featured-truck-img" />
+        </div>
+      </div>
+      <div class="vms-featured-details" id="vms-featured-telemetry-box">
+        <div class="vms-telemetry-row">
+          <span class="vms-vehicle-plate" id="vms-feat-plate">Loading active trip...</span>
+          <span class="vms-driver-pill" id="vms-feat-driver">--</span>
+        </div>
+        <div class="vms-route-display" id="vms-feat-route">--</div>
+        <div class="vms-telemetry-notice" id="vms-telemetry-notice">
+          <i class="fa fa-info-circle"></i> Telemetry status based on logged ERPNext trip stops.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Incoming Communications Feed -->
+    <div class="vms-card vms-communications-card">
+      <div class="vms-card-header">
+        <h4 class="vms-card-title">Incoming communications</h4>
+        <span class="vms-unread-pill" id="vms-unread-badge">0</span>
+      </div>
+      <!-- Tab Navigation -->
+      <div class="vms-comm-tabs">
+        <button class="vms-tab-btn active" data-tab="all">View all</button>
+        <button class="vms-tab-btn" data-tab="approvals">Approvals</button>
+        <button class="vms-tab-btn" data-tab="alerts">Alerts</button>
+      </div>
+      <!-- Scrollable Feed -->
+      <div class="vms-comm-feed-list" id="vms-comm-feed-container">
+        <div class="vms-empty-state">Loading operational notifications...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lower Row: Collections Chart & Kerala Regional Operations Map -->
+  <div class="vms-grid-row-secondary">
+    <!-- Collections & Turnovers Chart -->
+    <div class="vms-card vms-chart-card">
+      <div class="vms-card-header">
+        <h4 class="vms-card-title">Collections & Turnover over time</h4>
+        <span class="vms-card-tag">Monthly Verified</span>
+      </div>
+      <div class="vms-card-subheading">
+        <span class="vms-large-stat" id="vms-collections-total">₹0.00</span>
+        <span class="vms-trend-pill" id="vms-collections-sub">Reconciled Collections</span>
+      </div>
+      <div class="vms-chart-body" id="vms-collections-chart-container">
+        <div class="vms-chart-bars-wrap" id="vms-chart-bars"></div>
+      </div>
+    </div>
+
+    <!-- Kerala Regional Operations Map Card -->
+    <div class="vms-card vms-kerala-map-card">
+      <div class="vms-card-header">
+        <h4 class="vms-card-title"><i class="fa fa-map-o"></i> Kerala Operations Map</h4>
+        <span class="vms-card-tag" id="vms-map-status-tag">Configured Depots</span>
+      </div>
+      <div class="vms-map-container" id="vms-kerala-map-box">
+        <div id="vms-leaflet-map" class="vms-map-view"></div>
+        <div id="vms-map-fallback" class="vms-map-fallback-view" style="display: none;">
+          <div class="vms-fallback-header">
+            <i class="fa fa-map-pin"></i>
+            <span>Configured Warehouses & Active Stops</span>
+          </div>
+          <div class="vms-fallback-list" id="vms-fallback-list-items"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Section: Shipments Overview Table -->
+  <div class="vms-card vms-shipments-table-card">
+    <div class="vms-table-header-row">
+      <h4 class="vms-card-title">Shipments overview</h4>
+      <div class="vms-table-controls">
+        <input type="text" class="form-control input-sm vms-search-input" id="vms-shipment-search" placeholder="Search route, truck, customer..." />
+        <select class="form-control input-sm vms-status-select" id="vms-shipment-filter">
+          <option value="All">All Statuses</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Completed">Completed</option>
+          <option value="Dispatched">Dispatched</option>
+          <option value="Delayed">Delayed</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table vms-data-table">
+        <thead>
+          <tr>
+            <th>ID <i class="fa fa-sort"></i></th>
+            <th>ROUTE <i class="fa fa-sort"></i></th>
+            <th>WEIGHT <i class="fa fa-sort"></i></th>
+            <th>STATUS <i class="fa fa-sort"></i></th>
+            <th>TRUCK <i class="fa fa-sort"></i></th>
+            <th>DEPARTURE / ETA <i class="fa fa-sort"></i></th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="vms-shipments-tbody">
+          <tr>
+            <td colspan="7" class="text-center text-muted p-4">Loading operational shipments...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vms-pagination-row">
+      <span class="vms-pagination-info" id="vms-pagination-info">Showing 0 of 0 shipments</span>
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-default" id="vms-prev-page" disabled><i class="fa fa-chevron-left"></i></button>
+        <button class="btn btn-default" id="vms-next-page" disabled><i class="fa fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+</div>

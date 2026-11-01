@@ -1,0 +1,31 @@
+{
+  "name": "Payment Collection Allocation",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "sales_invoice",
+      "label": "Sales Invoice",
+      "fieldtype": "Link",
+      "options": "Sales Invoice",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "outstanding_amount",
+      "label": "Invoice Outstanding",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "allocated_amount",
+      "label": "Allocated Amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "reqd": 1
+    }
+  ],
+  "permissions": []
+}

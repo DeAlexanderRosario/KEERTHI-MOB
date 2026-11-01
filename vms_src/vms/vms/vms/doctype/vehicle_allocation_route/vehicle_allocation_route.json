@@ -1,0 +1,29 @@
+{
+  "name": "Vehicle Allocation Route",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "stop_sequence",
+      "label": "Stop Sequence",
+      "fieldtype": "Int",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "route",
+      "label": "Route",
+      "fieldtype": "Link",
+      "options": "Route",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "estimated_time",
+      "label": "Estimated Time (Mins)",
+      "fieldtype": "Int",
+      "in_list_view": 1
+    }
+  ],
+  "permissions": []
+}

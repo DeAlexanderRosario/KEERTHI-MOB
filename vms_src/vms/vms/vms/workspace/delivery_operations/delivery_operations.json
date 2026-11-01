@@ -1,0 +1,75 @@
+{
+  "doctype": "Workspace",
+  "name": "Delivery Operations",
+  "title": "Delivery Operations",
+  "module": "VMS",
+  "icon": "truck",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "Dispatcher"
+    },
+    {
+      "role": "Fleet Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "Active Delivery Trips",
+      "type": "DocType",
+      "link_to": "Delivery Trip",
+      "color": "Blue"
+    },
+    {
+      "label": "Proof of Delivery Records",
+      "type": "DocType",
+      "link_to": "Proof of Delivery",
+      "color": "Green"
+    },
+    {
+      "label": "Trip Sheet Register",
+      "type": "Report",
+      "link_to": "Delivery Trip Register",
+      "color": "Orange"
+    },
+    {
+      "label": "POD Verification Report",
+      "type": "Report",
+      "link_to": "POD Verification Report",
+      "color": "Purple"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Active Delivery Trips",
+      "number_card_name": "Active Delivery Trips"
+    },
+    {
+      "label": "PODs Pending Verification",
+      "number_card_name": "POD Pending Verification"
+    }
+  ],
+  "content": "[{\"id\":\"vms-delivery-operation-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Delivery Trips\",\"col\":6}},{\"id\":\"vms-delivery-operation-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"POD Pending Verification\",\"col\":6}},{\"id\":\"vms-delivery-operation-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Active Delivery Trips\",\"col\":4}},{\"id\":\"vms-delivery-operation-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Proof of Delivery Records\",\"col\":4}},{\"id\":\"vms-delivery-operation-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Trip Sheet Register\",\"col\":4}},{\"id\":\"vms-delivery-operation-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POD Verification Report\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Trips by Status",
+      "chart_name": "Trips by Status"
+    },
+    {
+      "label": "Deliveries by Route",
+      "chart_name": "Deliveries by Route"
+    }
+  ]
+}

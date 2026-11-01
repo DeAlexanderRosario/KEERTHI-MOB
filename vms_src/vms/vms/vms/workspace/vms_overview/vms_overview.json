@@ -1,0 +1,99 @@
+{
+  "doctype": "Workspace",
+  "name": "VMS Overview",
+  "title": "VMS Overview",
+  "module": "VMS",
+  "icon": "activity",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "VMS Executive"
+    },
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "General Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "VMS Operations Dashboard",
+      "type": "Page",
+      "link_to": "vms_dashboard",
+      "color": "Green"
+    },
+    {
+      "label": "Orders Awaiting Allocation",
+      "type": "DocType",
+      "link_to": "Vehicle Allocation",
+      "color": "Red"
+    },
+    {
+      "label": "Active Delivery Trips",
+      "type": "DocType",
+      "link_to": "Delivery Trip",
+      "color": "Blue"
+    },
+    {
+      "label": "Collections Pending Verification",
+      "type": "DocType",
+      "link_to": "Payment Collection",
+      "color": "Orange"
+    },
+    {
+      "label": "Delivery Trip Register",
+      "type": "Report",
+      "link_to": "Delivery Trip Register",
+      "color": "Green"
+    },
+    {
+      "label": "Warehouse Discrepancies",
+      "type": "Report",
+      "link_to": "Warehouse Discrepancy Report",
+      "color": "Grey"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Active Delivery Trips",
+      "number_card_name": "Active Delivery Trips"
+    },
+    {
+      "label": "Orders Awaiting Allocation",
+      "number_card_name": "Orders Awaiting Allocation"
+    },
+    {
+      "label": "Collections Pending Verification",
+      "number_card_name": "Pending Collections"
+    },
+    {
+      "label": "Total Collections This Month",
+      "number_card_name": "Monthly Collections"
+    }
+  ],
+  "content": "[{\"id\":\"vms-vms-overview-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Delivery Trips\",\"col\":4}},{\"id\":\"vms-vms-overview-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Orders Awaiting Allocation\",\"col\":4}},{\"id\":\"vms-vms-overview-metric-3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Collections\",\"col\":4}},{\"id\":\"vms-vms-overview-metric-4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Monthly Collections\",\"col\":4}},{\"id\":\"vms-vms-overview-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"VMS Operations Dashboard\",\"col\":4}},{\"id\":\"vms-vms-overview-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Orders Awaiting Allocation\",\"col\":4}},{\"id\":\"vms-vms-overview-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Active Delivery Trips\",\"col\":4}},{\"id\":\"vms-vms-overview-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Collections Pending Verification\",\"col\":4}},{\"id\":\"vms-vms-overview-shortcut-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Trip Register\",\"col\":4}},{\"id\":\"vms-vms-overview-shortcut-6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Warehouse Discrepancies\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Trips by Status",
+      "chart_name": "Trips by Status"
+    },
+    {
+      "label": "Deliveries by Route",
+      "chart_name": "Deliveries by Route"
+    },
+    {
+      "label": "Payment Collections by Mode",
+      "chart_name": "Payment Collections by Mode"
+    }
+  ]
+}

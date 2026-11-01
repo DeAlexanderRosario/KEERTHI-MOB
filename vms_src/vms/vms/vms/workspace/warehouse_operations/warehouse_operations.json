@@ -1,0 +1,75 @@
+{
+  "doctype": "Workspace",
+  "name": "Warehouse Operations",
+  "title": "Warehouse Operations",
+  "module": "VMS",
+  "icon": "boxes",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "Warehouse User"
+    },
+    {
+      "role": "Warehouse Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "Orders Awaiting Picking",
+      "type": "DocType",
+      "link_to": "Vehicle Allocation",
+      "color": "Blue"
+    },
+    {
+      "label": "Report Discrepancy",
+      "type": "DocType",
+      "link_to": "Warehouse Discrepancy",
+      "color": "Red"
+    },
+    {
+      "label": "Stock Entry",
+      "type": "DocType",
+      "link_to": "Stock Entry",
+      "color": "Grey"
+    },
+    {
+      "label": "Delivery Notes",
+      "type": "DocType",
+      "link_to": "Delivery Note",
+      "color": "Green"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Open Warehouse Discrepancies",
+      "number_card_name": "Open Warehouse Discrepancies"
+    },
+    {
+      "label": "Orders Awaiting Allocation",
+      "number_card_name": "Orders Awaiting Allocation"
+    }
+  ],
+  "content": "[{\"id\":\"vms-warehouse-operatio-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Warehouse Discrepancies\",\"col\":6}},{\"id\":\"vms-warehouse-operatio-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Orders Awaiting Allocation\",\"col\":6}},{\"id\":\"vms-warehouse-operatio-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Orders Awaiting Picking\",\"col\":4}},{\"id\":\"vms-warehouse-operatio-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Report Discrepancy\",\"col\":4}},{\"id\":\"vms-warehouse-operatio-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Entry\",\"col\":4}},{\"id\":\"vms-warehouse-operatio-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Notes\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Allocations by Status",
+      "chart_name": "Allocations by Status"
+    },
+    {
+      "label": "Warehouse Discrepancies by Type",
+      "chart_name": "Warehouse Discrepancies by Type"
+    }
+  ]
+}

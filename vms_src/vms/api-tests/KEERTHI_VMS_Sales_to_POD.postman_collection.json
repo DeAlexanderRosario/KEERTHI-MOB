@@ -1,0 +1,852 @@
+{
+  "info": {
+    "_postman_id": "7e389ef1-97ba-4bb2-a7cc-90b6d4d278e4",
+    "name": "KEERTHI VMS — Sales to Delivery POD API Flow",
+    "description": "Run only against a dedicated test site. Uses separate API tokens per role. Creates a Shop Visit, draft Sales Order, submitted order, allocation, delivery trip, and POD. One test customer and one order item/stop are expected.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sales_agent_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sales_manager_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dispatcher_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "warehouse_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "driver_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customer",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "item_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_qty",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "delivery_date",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehicle",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "driver",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "route",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "warehouse",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "receiver_name",
+      "value": "Test Receiver",
+      "type": "string"
+    },
+    {
+      "key": "receiver_phone",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lat",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lng",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pod_photo_url",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sales Agent — Create Shop Visit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{sales_agent_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "customer",
+              "value": "{{customer}}",
+              "type": "text"
+            },
+            {
+              "key": "purpose",
+              "value": "Sales Pitch",
+              "type": "text"
+            },
+            {
+              "key": "notes",
+              "value": "API flow test only",
+              "type": "text"
+            },
+            {
+              "key": "items",
+              "value": "[{\"item_code\":\"{{item_code}}\",\"order_qty\":{{order_qty}},\"stock_level_at_shop\":0,\"customer_interest\":\"High\"}]",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.field_sales.create_shop_visit",
+        "description": "Order quantities are saved on the Shop Visit item rows."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Shop Visit created', function () { pm.response.to.have.status(200); });",
+              "const r=pm.response.json().message; pm.expect(r.status).to.eql('success'); pm.environment.set('shop_visit', r.visit_name);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Sales Agent — Create Sales Order draft",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{sales_agent_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "customer",
+              "value": "{{customer}}",
+              "type": "text"
+            },
+            {
+              "key": "items_json",
+              "value": "[{\"item_code\":\"{{item_code}}\",\"qty\":{{order_qty}},\"rate\":0}]",
+              "type": "text"
+            },
+            {
+              "key": "delivery_date",
+              "value": "{{delivery_date}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.field_sales.create_sales_order",
+        "description": "The API ignores the supplied rate and uses the customer price list Item Price."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const r=pm.response.json().message; pm.expect(r.status).to.eql('success'); pm.environment.set('sales_order', r.sales_order);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Sales Manager — Read Sales Order lines",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{sales_manager_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "doctype",
+              "value": "Sales Order",
+              "type": "text"
+            },
+            {
+              "key": "name",
+              "value": "{{sales_order}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/frappe.client.get",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const so=pm.response.json().message; pm.expect(so.name).to.eql(pm.environment.get('sales_order')); pm.expect(so.items.length).to.be.above(0); pm.environment.set('sales_order_item', so.items[0].name);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Sales Manager — Submit Sales Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{sales_manager_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "doc",
+              "value": "{\"doctype\":\"Sales Order\",\"name\":\"{{sales_order}}\"}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/frappe.client.submit",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const so=pm.response.json().message; pm.expect(so.docstatus).to.eql(1);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Dispatcher — Create Vehicle Allocation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{dispatcher_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "vehicle",
+              "value": "{{vehicle}}",
+              "type": "text"
+            },
+            {
+              "key": "driver",
+              "value": "{{driver}}",
+              "type": "text"
+            },
+            {
+              "key": "route",
+              "value": "{{route}}",
+              "type": "text"
+            },
+            {
+              "key": "delivery_date",
+              "value": "{{delivery_date}}",
+              "type": "text"
+            },
+            {
+              "key": "orders_json",
+              "value": "[{\"sales_order\":\"{{sales_order}}\",\"sales_order_item\":\"{{sales_order_item}}\",\"customer\":\"{{customer}}\",\"item_code\":\"{{item_code}}\",\"allocated_qty\":{{order_qty}},\"warehouse\":\"{{warehouse}}\"}]",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.dispatch.create_or_update_allocation",
+        "description": "Requires a positive vehicle payload capacity and an active mapped driver."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const r=pm.response.json().message; pm.expect(r.status).to.eql('success'); pm.environment.set('allocation', r.allocation_name);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Dispatcher — Submit to Warehouse",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{dispatcher_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "allocation_name",
+              "value": "{{allocation}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.dispatch.submit_to_warehouse",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.expect(pm.response.json().message.status).to.eql('success');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Warehouse — Record Picked Quantity",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{warehouse_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "allocation_name",
+              "value": "{{allocation}}",
+              "type": "text"
+            },
+            {
+              "key": "item_code",
+              "value": "{{item_code}}",
+              "type": "text"
+            },
+            {
+              "key": "picked_qty",
+              "value": "{{order_qty}}",
+              "type": "text"
+            },
+            {
+              "key": "bin_location",
+              "value": "API-FLOW-TEST",
+              "type": "text"
+            },
+            {
+              "key": "sales_order",
+              "value": "{{sales_order}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.warehouse.record_picking",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.expect(pm.response.json().exc).to.be.undefined;"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Warehouse — Verify Loading",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{warehouse_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "allocation_name",
+              "value": "{{allocation}}",
+              "type": "text"
+            },
+            {
+              "key": "remarks",
+              "value": "API flow test loading verified",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.warehouse.verify_loading",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.expect(pm.response.json().message.status).to.eql('success');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Dispatcher — Approve Dispatch",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{dispatcher_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "allocation_name",
+              "value": "{{allocation}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.dispatch.approve_dispatch",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const r=pm.response.json().message; pm.expect(r.status).to.eql('success'); pm.environment.set('trip_name',r.trip_name);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Driver — List Assigned Active Trips",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{driver_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": []
+        },
+        "url": "{{base_url}}/api/method/vms.api.driver_portal.get_my_trips",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const trips=pm.response.json().message; const t=trips.find(x=>x.name===pm.environment.get('trip_name')); pm.expect(t,'New dispatched trip should be assigned to this driver').to.exist;"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Driver — Start Trip",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{driver_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "trip_name",
+              "value": "{{trip_name}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.driver_portal.start_trip",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.expect(pm.response.json().message.status).to.eql('success');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Driver — Load Trip Stops and Items",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{driver_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "trip_name",
+              "value": "{{trip_name}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.driver_portal.get_trip_details",
+        "description": "This test assumes one stop for the selected customer. The POD form can auto-fill the same trip-linked fields."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const trip=pm.response.json().message; pm.expect(trip.items.length).to.be.above(0); const stop=trip.stops.find(s=>s.customer===pm.environment.get('customer')&&['Pending','Arrived'].includes(s.status)); pm.expect(stop,'Expected test customer stop').to.exist; pm.environment.set('stop_name',stop.name); pm.environment.set('stop_sequence',String(stop.stop_sequence)); const lines=trip.items.filter(i=>String(i.stop_reference||'')===String(stop.stop_sequence)||String(i.stop_reference||'')===String(stop.name)); pm.expect(lines.length).to.be.above(0); const pods=lines.map(i=>({sales_order:i.sales_order,sales_order_item:i.sales_order_item,item_code:i.item_code,allocated_qty:Number(i.allocated_qty),delivered_qty:Number(i.allocated_qty),damaged_qty:0,short_qty:0,rejected_qty:0})); pm.environment.set('pod_items_json',JSON.stringify(pods));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. Driver — Record Arrival",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{driver_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "trip_name",
+              "value": "{{trip_name}}",
+              "type": "text"
+            },
+            {
+              "key": "stop_name",
+              "value": "{{stop_name}}",
+              "type": "text"
+            },
+            {
+              "key": "lat",
+              "value": "{{lat}}",
+              "type": "text"
+            },
+            {
+              "key": "lng",
+              "value": "{{lng}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.driver_portal.record_arrival",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.expect(pm.response.json().message.status).to.eql('success');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Optional — Upload Private POD Test Photo",
+      "item": [
+        {
+          "name": "Driver — Upload a test image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "token {{driver_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "is_private",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/method/upload_file",
+            "description": "Optional: select a harmless test image in Postman. Keep the upload private so the POD controller can hash the file bytes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Private POD image uploaded', function () { pm.response.to.have.status(200); });",
+                  "const r=pm.response.json().message; pm.expect(r.file_url).to.include('/private/files/'); pm.environment.set('pod_photo_url',r.file_url);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14. Driver — Submit POD",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "token {{driver_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "trip_name",
+              "value": "{{trip_name}}",
+              "type": "text"
+            },
+            {
+              "key": "stop_name",
+              "value": "{{stop_name}}",
+              "type": "text"
+            },
+            {
+              "key": "receiver_name",
+              "value": "{{receiver_name}}",
+              "type": "text"
+            },
+            {
+              "key": "receiver_phone",
+              "value": "{{receiver_phone}}",
+              "type": "text"
+            },
+            {
+              "key": "items_json",
+              "value": "{{pod_items_json}}",
+              "type": "text"
+            },
+            {
+              "key": "photos_json",
+              "value": "{{pod_photos_json}}",
+              "type": "text"
+            },
+            {
+              "key": "lat",
+              "value": "{{lat}}",
+              "type": "text"
+            },
+            {
+              "key": "lng",
+              "value": "{{lng}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/method/vms.api.driver_portal.submit_pod",
+        "description": "Receiver name and real delivery quantities/evidence must be supplied by the test driver."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const url=pm.environment.get('pod_photo_url'); pm.environment.set('pod_photos_json',url?JSON.stringify([{category:'Delivery Evidence',photo_url:url,remarks:'Test-site evidence'}]):'[]');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const r=pm.response.json().message; pm.expect(r.status).to.eql('success'); pm.expect(r.audit_hash).to.match(/^[a-f0-9]{64}$/); pm.environment.set('pod_name',r.pod_name);"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

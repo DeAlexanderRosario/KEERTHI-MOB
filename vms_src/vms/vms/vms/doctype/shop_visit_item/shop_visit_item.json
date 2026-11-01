@@ -1,0 +1,43 @@
+{
+  "name": "Shop Visit Item",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "label": "Item Code",
+      "fieldtype": "Link",
+      "options": "Item",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "order_qty",
+      "label": "Order Quantity",
+      "fieldtype": "Float",
+      "default": 0,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "stock_level_at_shop",
+      "label": "Stock at Shop",
+      "fieldtype": "Float",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "customer_interest",
+      "label": "Interest Level",
+      "fieldtype": "Select",
+      "options": "High\nMedium\nLow\nNone",
+      "default": "Medium",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "notes",
+      "label": "Notes",
+      "fieldtype": "Data"
+    }
+  ],
+  "permissions": []
+}

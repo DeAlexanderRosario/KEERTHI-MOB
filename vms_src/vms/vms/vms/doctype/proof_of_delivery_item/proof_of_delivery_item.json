@@ -1,0 +1,72 @@
+{
+  "name": "Proof of Delivery Item",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "label": "Item Code",
+      "fieldtype": "Link",
+      "options": "Item",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_name",
+      "label": "Item Name",
+      "fieldtype": "Data",
+      "fetch_from": "item_code.item_name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "allocated_qty",
+      "label": "Allocated",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "delivered_qty",
+      "label": "Delivered",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "damaged_qty",
+      "label": "Damaged",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "default": 0
+    },
+    {
+      "fieldname": "short_qty",
+      "label": "Short",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "default": 0
+    },
+    {
+      "fieldname": "rejected_qty",
+      "label": "Rejected",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "default": 0
+    },
+    {
+      "fieldname": "sales_order",
+      "label": "Sales Order",
+      "fieldtype": "Link",
+      "options": "Sales Order"
+    },
+    {
+      "fieldname": "sales_order_item",
+      "label": "Sales Order Item",
+      "fieldtype": "Link",
+      "options": "Sales Order Item",
+      "read_only": 1
+    }
+  ],
+  "permissions": []
+}

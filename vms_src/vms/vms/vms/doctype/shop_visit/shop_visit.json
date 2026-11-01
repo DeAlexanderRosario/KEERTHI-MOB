@@ -1,0 +1,110 @@
+{
+  "name": "Shop Visit",
+  "doctype": "DocType",
+  "module": "VMS",
+  "autoname": "format:VISIT-.YYYY.-.#####",
+  "naming_rule": "Expression",
+  "fields": [
+    {
+      "fieldname": "sales_agent",
+      "label": "Sales Agent",
+      "fieldtype": "Link",
+      "options": "User",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "client_mutation_id",
+      "label": "Mobile Mutation ID",
+      "fieldtype": "Data",
+      "unique": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "customer",
+      "label": "Customer",
+      "fieldtype": "Link",
+      "options": "Customer",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "visit_datetime",
+      "label": "Visit Time",
+      "fieldtype": "Datetime",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "purpose",
+      "label": "Purpose",
+      "fieldtype": "Select",
+      "options": "Sales Pitch\nPayment Follow-up\nStock Check\nDispute Resolution\nRoutine Relationship",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "label": "Visit Status",
+      "fieldtype": "Select",
+      "options": "Open\nCompleted",
+      "default": "Open",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "notes",
+      "label": "Visit Summary",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "next_followup_date",
+      "label": "Next Follow-up Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "latitude",
+      "label": "Latitude",
+      "fieldtype": "Float",
+      "read_only": 1
+    },
+    {
+      "fieldname": "longitude",
+      "label": "Longitude",
+      "fieldtype": "Float",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_items",
+      "label": "Item Demand / Feedback",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "items",
+      "label": "Items",
+      "fieldtype": "Table",
+      "options": "Shop Visit Item"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Field Sales Agent",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "if_owner": 1
+    },
+    {
+      "role": "Sales Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "doctype": "Print Format",
+  "name": "Trip Sheet",
+  "module": "VMS",
+  "doc_type": "Delivery Trip",
+  "standard": "Yes",
+  "print_format_type": "Jinja",
+  "html": "\n<div style=\"padding: 20px; font-family: sans-serif;\">\n    <h2 style=\"color: #1e3a8a;\">KEERTHI GROUPS HARDWARE \u2014 DELIVERY TRIP SHEET</h2>\n    <p><strong>Trip No:</strong> {{ doc.name }} | <strong>Vehicle:</strong> {{ doc.vehicle }} | <strong>Driver:</strong> {{ doc.driver }}</p>\n    <p><strong>Route:</strong> {{ doc.route }} | <strong>Scheduled Departure:</strong> {{ doc.departure_time }}</p>\n    \n    <h3>Delivery Stops in Order</h3>\n    <table style=\"width: 100%; border-collapse: collapse;\" border=\"1\">\n        <thead>\n            <tr style=\"background: #f1f5f9;\">\n                <th style=\"padding: 8px;\">Seq</th>\n                <th style=\"padding: 8px;\">Customer</th>\n                <th style=\"padding: 8px;\">Delivery Address</th>\n                <th style=\"padding: 8px;\">Phone</th>\n                <th style=\"padding: 8px;\">Status</th>\n            </tr>\n        </thead>\n        <tbody>\n            {% for stop in doc.stops %}\n            <tr>\n                <td style=\"padding: 6px; text-align: center;\">{{ stop.stop_sequence }}</td>\n                <td style=\"padding: 6px;\">{{ stop.customer_name or stop.customer }}</td>\n                <td style=\"padding: 6px;\">{{ stop.address }}</td>\n                <td style=\"padding: 6px;\">{{ stop.contact_phone }}</td>\n                <td style=\"padding: 6px;\">{{ stop.status }}</td>\n            </tr>\n            {% endfor %}\n        </tbody>\n    </table>\n</div>\n"
+}

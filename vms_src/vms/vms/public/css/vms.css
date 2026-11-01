@@ -1,0 +1,276 @@
+/* Keerthi VMS - Native Frappe Desk Styles */
+
+:root {
+    --keerthi-charcoal: #090b0a;
+    --keerthi-green: #20d52e;
+    --keerthi-forest: #0b4025;
+    --keerthi-white: #ffffff;
+    --keerthi-background: #f5f7f5;
+    --keerthi-border: #dce5de;
+}
+
+.vms-indicator-allocated {
+    color: #075985;
+    background-color: #e0f2fe;
+}
+
+.vms-indicator-dispatched {
+    color: #854d0e;
+    background-color: #fef3c7;
+}
+
+.vms-indicator-delivered {
+    color: #17633a;
+    background-color: #e5f5e9;
+}
+
+.vms-indicator-discrepancy {
+    color: var(--red-600);
+    background-color: var(--red-50);
+}
+
+.vms-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.vms-card-metric {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--heading-color);
+}
+
+/* VMS operational components follow Frappe/Nexus tokens when active and
+   fall back to the KEERTHI light palette on the stock Desk theme. */
+.vms-badge {
+    border: 1px solid var(--border-color, var(--keerthi-border));
+    background: var(--bg-light-gray, var(--keerthi-background));
+    color: var(--text-color, var(--keerthi-charcoal));
+}
+
+.vms-primary-action {
+    color: var(--keerthi-white);
+    background: var(--keerthi-forest);
+    border-color: var(--keerthi-forest);
+}
+
+.vms-primary-action:hover,
+.vms-primary-action:focus-visible {
+    color: var(--keerthi-white);
+    background: #145b33;
+    border-color: #145b33;
+}
+
+.vms-pod-evidence-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+    padding: 0.75rem 0;
+}
+
+.vms-pod-evidence-tile {
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    flex-direction: column;
+    border: 1px solid var(--border-color, var(--keerthi-border));
+    border-radius: 12px;
+    background: var(--card-bg, var(--keerthi-white));
+    color: var(--text-color, var(--keerthi-charcoal));
+    text-decoration: none;
+    transition: box-shadow 140ms ease, transform 140ms ease, border-color 140ms ease;
+}
+
+.vms-pod-evidence-tile:hover,
+.vms-pod-evidence-tile:focus-visible {
+    border-color: #20d52e;
+    box-shadow: 0 8px 22px rgb(9 11 10 / 12%);
+    color: inherit;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.vms-pod-evidence-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--bg-light-gray, var(--keerthi-background));
+}
+
+.vms-pod-evidence-caption {
+    display: flex;
+    min-height: 56px;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.82rem;
+}
+
+.vms-pod-evidence-caption > span,
+.vms-pod-evidence-empty { color: var(--text-muted, #53635a); }
+
+@media (prefers-reduced-motion: reduce) {
+    .vms-pod-evidence-tile { transition: none; }
+}
+
+.vms-indicator-discrepancy {
+    color: #a12622;
+    background-color: #fdebea;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vms-badge,
+    .vms-primary-action { transition: none !important; }
+}
+
+/* VMS workspaces and records only: keep Desk-wide styling owned by
+   Frappe and Nexus Theme while giving the VMS surfaces a consistent brand. */
+body.keerthi-vms-workspace .page-head .page-title,
+body.keerthi-vms-record .page-head .page-title {
+    color: var(--heading-color, #090b0a);
+    font-weight: 700;
+}
+
+body.keerthi-vms-workspace .page-head .page-title::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 1em;
+    margin-inline-end: 0.55rem;
+    vertical-align: -0.12em;
+    border-radius: 4px;
+    background: #20d52e;
+}
+
+body.keerthi-vms-record .btn-primary,
+body.keerthi-vms-record .page-head .btn-primary {
+    color: #ffffff;
+    background-color: #0b4025;
+    border-color: #0b4025;
+}
+
+body.keerthi-vms-record .btn-primary:hover,
+body.keerthi-vms-record .page-head .btn-primary:hover {
+    background-color: #145b33;
+    border-color: #145b33;
+}
+
+body.keerthi-vms-record .form-tabs-list .nav-link.active,
+body.keerthi-vms-record .form-tabs-list .nav-item .nav-link.active {
+    color: #0b4025;
+    border-bottom-color: #20d52e;
+}
+
+body.keerthi-vms-record .list-row-container:hover,
+body.keerthi-vms-record .list-row-head:hover {
+    background-color: color-mix(in srgb, #20d52e 5%, var(--bg-color, #ffffff));
+}
+
+body.keerthi-vms-workspace .editor-js-container {
+    color: var(--text-color, #090b0a);
+}
+
+body.keerthi-vms-workspace .workspace-title {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+body.keerthi-vms-workspace .workspace-icon {
+    color: #0b4025;
+}
+
+/* KEERTHI navigation skin on VMS workspaces when Nexus has no user theme
+   selected. Nexus keeps full control as soon as its theme attribute exists. */
+html:not([data-app-theme]):not([data-theme="dark"]) body.keerthi-vms-workspace .body-sidebar {
+    color: #ffffff;
+    background: #0b4025;
+    border-inline-end: 1px solid #174b30;
+}
+
+html:not([data-app-theme])[data-theme="dark"] body.keerthi-vms-workspace .body-sidebar {
+    color: #ffffff;
+    background: #090b0a;
+    border-inline-end: 1px solid #26342b;
+}
+
+html:not([data-app-theme]) body.keerthi-vms-workspace .body-sidebar .standard-sidebar-item .item-anchor,
+html:not([data-app-theme]) body.keerthi-vms-workspace .body-sidebar .section-break .sidebar-item-label {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+html:not([data-app-theme]) body.keerthi-vms-workspace .body-sidebar .standard-sidebar-item:not(.active-sidebar):hover {
+    background: rgba(255, 255, 255, 0.09);
+}
+
+html:not([data-app-theme]) body.keerthi-vms-workspace .body-sidebar .standard-sidebar-item.active-sidebar {
+    background: #20d52e;
+    border-radius: 8px;
+}
+
+html:not([data-app-theme]) body.keerthi-vms-workspace .body-sidebar .standard-sidebar-item.active-sidebar .item-anchor,
+html:not([data-app-theme]) body.keerthi-vms-workspace .body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-label {
+    color: #090b0a;
+    font-weight: 700;
+}
+
+html[data-theme="dark"] body.keerthi-vms-workspace .workspace-icon,
+html[data-app-dark="1"] body.keerthi-vms-workspace .workspace-icon {
+    color: #20d52e;
+}
+/* Modern, compact workspace composition across VMS roles. The theme variables
+   preserve Nexus and Frappe light/dark mode selection. */
+body.keerthi-vms-workspace .workspace-container {
+    max-width: 1680px;
+    margin-inline: auto;
+}
+body.keerthi-vms-workspace .workspace-container .widget,
+body.keerthi-vms-workspace .workspace-container .number-widget,
+body.keerthi-vms-workspace .workspace-container .shortcut-widget,
+body.keerthi-vms-workspace .workspace-container .chart-widget {
+    border: 1px solid var(--border-color, var(--keerthi-border));
+    border-radius: 14px;
+    background: var(--card-bg, var(--bg-color, #ffffff));
+    box-shadow: 0 2px 8px rgb(9 11 10 / 4%);
+}
+body.keerthi-vms-workspace .workspace-container .number-widget {
+    min-height: 112px;
+    padding: 1rem 1.1rem;
+    border-top: 3px solid #20d52e;
+}
+body.keerthi-vms-workspace .workspace-container .number-widget .widget-title,
+body.keerthi-vms-workspace .workspace-container .shortcut-widget .widget-title {
+    color: var(--text-color, #090b0a);
+    font-weight: 600;
+}
+body.keerthi-vms-workspace .workspace-container .number-widget .number {
+    font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+}
+body.keerthi-vms-workspace .workspace-container .chart-widget {
+    min-height: 280px;
+    overflow: hidden;
+}
+body.keerthi-vms-workspace .workspace-container .shortcut-widget {
+    transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+body.keerthi-vms-workspace .workspace-container .shortcut-widget:hover {
+    border-color: #20d52e;
+    box-shadow: 0 8px 24px rgb(9 11 10 / 8%);
+    transform: translateY(-2px);
+}
+body.keerthi-vms-workspace .workspace-container .widget-head {
+    border-bottom-color: var(--border-color, var(--keerthi-border));
+}
+@media (max-width: 767px) {
+    body.keerthi-vms-workspace .workspace-container .chart-widget { min-height: 240px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.keerthi-vms-workspace .workspace-container .shortcut-widget { transition: none; }
+}

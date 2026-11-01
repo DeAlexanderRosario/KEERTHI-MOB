@@ -1,0 +1,77 @@
+{
+  "doctype": "Workspace",
+  "name": "Accounts & Collections",
+  "title": "Accounts & Collections",
+  "module": "VMS",
+  "icon": "dollar-sign",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "Accounts User"
+    },
+    {
+      "role": "Accounts Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "Collections Awaiting Verification",
+      "type": "DocType",
+      "link_to": "Payment Collection",
+      "color": "Orange"
+    },
+    {
+      "label": "ERPNext Payment Entries",
+      "type": "DocType",
+      "link_to": "Payment Entry",
+      "color": "Green"
+    },
+    {
+      "label": "Payment Discrepancies",
+      "type": "DocType",
+      "link_to": "Payment Discrepancy",
+      "color": "Red"
+    },
+    {
+      "label": "Accounts Receivable",
+      "type": "Report",
+      "link_to": "Accounts Receivable",
+      "color": "Blue"
+    },
+    {
+      "label": "Payment Collection Register",
+      "type": "Report",
+      "link_to": "Payment Collection Register",
+      "color": "Purple"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Collections Pending Verification",
+      "number_card_name": "Pending Collections"
+    },
+    {
+      "label": "Total Collections This Month",
+      "number_card_name": "Monthly Collections"
+    }
+  ],
+  "content": "[{\"id\":\"vms-accounts-collectio-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Collections\",\"col\":6}},{\"id\":\"vms-accounts-collectio-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Monthly Collections\",\"col\":6}},{\"id\":\"vms-accounts-collectio-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Collections Awaiting Verification\",\"col\":4}},{\"id\":\"vms-accounts-collectio-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ERPNext Payment Entries\",\"col\":4}},{\"id\":\"vms-accounts-collectio-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Discrepancies\",\"col\":4}},{\"id\":\"vms-accounts-collectio-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Accounts Receivable\",\"col\":4}},{\"id\":\"vms-accounts-collectio-shortcut-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Collection Register\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Payment Collections by Mode",
+      "chart_name": "Payment Collections by Mode"
+    }
+  ]
+}

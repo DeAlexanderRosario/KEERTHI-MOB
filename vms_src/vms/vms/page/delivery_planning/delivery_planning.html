@@ -1,0 +1,17 @@
+<section class="delivery-planning-view" aria-label="Delivery planning queue">
+  <div class="planning-intro">
+    <div>
+      <p class="planning-eyebrow">DISPATCH WORKSPACE</p>
+      <h3>Delivery planning</h3>
+      <p class="text-muted">Review open Sales Order lines before assigning vehicles and drivers.</p>
+    </div>
+    <div class="planning-count" id="planning-result-count" aria-live="polite">Loading queue…</div>
+  </div>
+  <div class="planning-toolbar">
+    <label class="planning-search-label" for="planning-search">Find an order</label>
+    <input type="search" id="planning-search" class="form-control" placeholder="Search order, customer, item or warehouse" autocomplete="off">
+  </div>
+  <div id="allocation-table-wrapper" class="allocation-table-wrapper" aria-live="polite">
+    <div class="planning-state"><i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i> Loading orders awaiting allocation…</div>
+  </div>
+</section>

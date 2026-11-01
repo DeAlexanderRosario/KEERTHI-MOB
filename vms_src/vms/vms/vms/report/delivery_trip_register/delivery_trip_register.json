@@ -1,0 +1,9 @@
+{
+  "doctype": "Report",
+  "name": "Delivery Trip Register",
+  "report_name": "Delivery Trip Register",
+  "report_type": "Script Report",
+  "is_standard": "Yes",
+  "module": "VMS",
+  "ref_doctype": "Delivery Trip"
+}

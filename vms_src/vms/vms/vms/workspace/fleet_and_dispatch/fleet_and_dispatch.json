@@ -1,0 +1,85 @@
+{
+  "doctype": "Workspace",
+  "name": "Fleet & Dispatch",
+  "title": "Fleet & Dispatch",
+  "module": "VMS",
+  "icon": "navigation",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "Dispatcher"
+    },
+    {
+      "role": "Fleet Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "Delivery Planning Console",
+      "type": "Page",
+      "link_to": "delivery_planning",
+      "color": "Blue"
+    },
+    {
+      "label": "Vehicle Allocations",
+      "type": "DocType",
+      "link_to": "Vehicle Allocation",
+      "color": "Purple"
+    },
+    {
+      "label": "Fleet Vehicles",
+      "type": "DocType",
+      "link_to": "Vehicle",
+      "color": "Green"
+    },
+    {
+      "label": "Drivers Master",
+      "type": "DocType",
+      "link_to": "Driver",
+      "color": "Grey"
+    },
+    {
+      "label": "Routes Master",
+      "type": "DocType",
+      "link_to": "Route",
+      "color": "Orange"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Active Delivery Trips",
+      "number_card_name": "Active Delivery Trips"
+    },
+    {
+      "label": "Orders Awaiting Allocation",
+      "number_card_name": "Orders Awaiting Allocation"
+    }
+  ],
+  "content": "[{\"id\":\"vms-fleet-dispatch-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Delivery Trips\",\"col\":6}},{\"id\":\"vms-fleet-dispatch-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Orders Awaiting Allocation\",\"col\":6}},{\"id\":\"vms-fleet-dispatch-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Planning Console\",\"col\":4}},{\"id\":\"vms-fleet-dispatch-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Allocations\",\"col\":4}},{\"id\":\"vms-fleet-dispatch-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Fleet Vehicles\",\"col\":4}},{\"id\":\"vms-fleet-dispatch-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Drivers Master\",\"col\":4}},{\"id\":\"vms-fleet-dispatch-shortcut-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Routes Master\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Trips by Status",
+      "chart_name": "Trips by Status"
+    },
+    {
+      "label": "Deliveries by Route",
+      "chart_name": "Deliveries by Route"
+    },
+    {
+      "label": "Allocations by Status",
+      "chart_name": "Allocations by Status"
+    }
+  ]
+}

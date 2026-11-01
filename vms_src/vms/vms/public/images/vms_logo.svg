@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="vmsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4025" />
+      <stop offset="50%" stop-color="#146B35" />
+      <stop offset="100%" stop-color="#20D52E" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#DCE5DE" />
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="url(#vmsGrad)" />
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+  
+  <!-- Fleet Truck / Logistics Symbol -->
+  <!-- Truck Cabin & Cargo Body -->
+  <path d="M 28 42 L 68 42 L 68 76 L 28 76 Z" fill="#FFFFFF" fill-opacity="0.95" />
+  <path d="M 70 50 L 86 50 L 92 64 L 92 76 L 70 76 Z" fill="#FFFFFF" fill-opacity="0.95" />
+  
+  <!-- Windshield -->
+  <path d="M 72 53 L 83 53 L 87 62 L 72 62 Z" fill="#0B4025" />
+  
+  <!-- Wheels -->
+  <circle cx="42" cy="78" r="8" fill="#1F2937" stroke="#94A3B8" stroke-width="2" />
+  <circle cx="42" cy="78" r="3" fill="#F8FAFC" />
+  <circle cx="80" cy="78" r="8" fill="#1F2937" stroke="#94A3B8" stroke-width="2" />
+  <circle cx="80" cy="78" r="3" fill="#F8FAFC" />
+  
+  <!-- Speed / Route Trail lines -->
+  <line x1="18" y1="46" x2="25" y2="46" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+  <line x1="14" y1="56" x2="25" y2="56" stroke="#DCE5DE" stroke-width="3" stroke-linecap="round" />
+  <line x1="20" y1="66" x2="25" y2="66" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- "K" Crest Accent -->
+  <polygon points="46,46 52,46 52,56 60,46 66,46 56,58 66,72 60,72 52,61 52,72 46,72" fill="url(#accentGrad)" />
+</svg>

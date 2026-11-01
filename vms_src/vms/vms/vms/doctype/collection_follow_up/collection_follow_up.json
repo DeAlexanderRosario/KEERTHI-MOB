@@ -1,0 +1,70 @@
+{
+  "name": "Collection Follow Up",
+  "doctype": "DocType",
+  "module": "VMS",
+  "autoname": "format:CFU-.YYYY.-.#####",
+  "naming_rule": "Expression",
+  "fields": [
+    {
+      "fieldname": "customer",
+      "label": "Customer",
+      "fieldtype": "Link",
+      "options": "Customer",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sales_agent",
+      "label": "Sales Agent",
+      "fieldtype": "Link",
+      "options": "User",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "due_date",
+      "label": "Expected Payment Date",
+      "fieldtype": "Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "expected_amount",
+      "label": "Expected Amount",
+      "fieldtype": "Currency",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "follow_up_notes",
+      "label": "Notes",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Open\nCollected\nDefaulted",
+      "default": "Open"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Field Sales Agent",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "Sales Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "Accounts User",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

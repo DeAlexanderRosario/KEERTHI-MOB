@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vms"
+version = "16.0.0"
+description = "Native Frappe v16 / ERPNext v16 Vehicle Management System for Keerthi Groups Hardware"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Keerthi Groups Hardware", email = "engineering@keerthigroups.com" }
+]
+dependencies = [
+    "frappe>=16.0.0"
+]

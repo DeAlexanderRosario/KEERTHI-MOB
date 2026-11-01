@@ -1,0 +1,30 @@
+{
+  "content": null,
+  "creation": "2026-10-31 12:00:00",
+  "docstatus": 0,
+  "doctype": "Page",
+  "idx": 0,
+  "modified": "2026-10-31 12:00:00",
+  "module": "VMS",
+  "name": "vms_dashboard",
+  "page_name": "vms_dashboard",
+  "roles": [
+    {
+      "role": "VMS Executive"
+    },
+    {
+      "role": "Fleet Manager"
+    },
+    {
+      "role": "Dispatcher"
+    },
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "General Manager"
+    }
+  ],
+  "standard": "Yes",
+  "title": "Operations Dashboard"
+}

@@ -1,0 +1,12 @@
+{
+  "doctype": "Dashboard Chart",
+  "name": "Shop Visits by Purpose",
+  "chart_name": "Shop Visits by Purpose",
+  "module": "VMS",
+  "is_standard": 1,
+  "chart_type": "Group By",
+  "document_type": "Shop Visit",
+  "group_by_based_on": "purpose",
+  "aggregate_function_based_on": "name",
+  "type": "Donut"
+}

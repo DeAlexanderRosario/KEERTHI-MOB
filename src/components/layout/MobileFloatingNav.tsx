@@ -1,9 +1,9 @@
 import React from 'react';
 import {
   Home,
-  Users,
+  Store,
+  Truck,
   Sparkles,
-  BarChart2,
   Grid,
 } from 'lucide-react';
 
@@ -20,12 +20,12 @@ export function MobileFloatingNav({
 }: MobileFloatingNavProps) {
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: Home },
-    { id: 'sales', label: 'Customers', icon: Users },
+    { id: 'field_sales', label: 'Field Sales', icon: Store },
+    { id: 'delivery', label: 'Driver', icon: Truck },
     { id: 'billing', label: 'Billing', icon: Sparkles },
-    { id: 'reports', label: 'Analytics', icon: BarChart2 },
   ];
 
-  const isMoreActive = !['dashboard', 'sales', 'billing', 'reports'].includes(activeModuleId);
+  const isMoreActive = !['dashboard', 'field_sales', 'delivery', 'billing'].includes(activeModuleId);
 
   return (
     <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 lg:hidden w-auto pointer-events-auto">

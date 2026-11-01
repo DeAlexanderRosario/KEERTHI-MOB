@@ -35,6 +35,20 @@ export const BUSINESS_MODULES: BusinessModule[] = [
     requiredRoles: ['All'],
   },
   {
+    id: 'field_sales',
+    label: 'Field Sales',
+    description: 'Onboard retail shops with storefront photo, log visits, take orders, and collect payments',
+    icon: 'Store',
+    navItems: [
+      { id: 'agent_portal', label: 'Field Agent Workspace', isCustomView: true },
+      { id: 'shops', label: 'Shops Directory', doctype: 'Customer' },
+      { id: 'visits', label: 'Shop Visits', isCustomView: true },
+      { id: 'orders', label: 'Sales Orders', doctype: 'Sales Order' },
+      { id: 'collections', label: 'Payment Collections', isCustomView: true },
+    ],
+    requiredRoles: ['All'],
+  },
+  {
     id: 'billing',
     label: 'Order Billing',
     description: 'Fast counter-sales billing, invoice drafting, and receipt generation',
@@ -114,16 +128,16 @@ export const BUSINESS_MODULES: BusinessModule[] = [
   },
   {
     id: 'delivery',
-    label: 'Delivery & Ops',
-    description: 'Dispatches, delivery trips, and assigned delivery notes',
+    label: 'Driver & Delivery',
+    description: 'Driver portal with shop storefront verification, navigation, and Proof of Delivery (POD)',
     icon: 'Truck',
     defaultDocType: 'Delivery Note',
     navItems: [
-      { id: 'delivery_queue', label: 'Delivery Queue', isCustomView: true },
-      { id: 'delivery_notes', label: 'Delivery Notes', doctype: 'Delivery Note' },
+      { id: 'driver_portal', label: 'Driver Delivery Portal', isCustomView: true },
       { id: 'delivery_trips', label: 'Delivery Trips', doctype: 'Delivery Trip' },
+      { id: 'delivery_notes', label: 'Delivery Notes', doctype: 'Delivery Note' },
     ],
-    requiredRoles: ['Delivery Staff', 'Delivery User', 'Stock User', 'Stock Manager', 'System Manager'],
+    requiredRoles: ['All'],
   },
   {
     id: 'hr',

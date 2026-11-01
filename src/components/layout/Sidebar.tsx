@@ -10,6 +10,7 @@ import {
   Users,
   FileSpreadsheet,
   ShieldCheck,
+  Store,
   ChevronRight,
   X,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ interface SidebarProps {
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   LayoutDashboard: <LayoutDashboard className="w-4 h-4 shrink-0" />,
+  Store: <Store className="w-4 h-4 shrink-0" />,
   Receipt: <Receipt className="w-4 h-4 shrink-0" />,
   Calculator: <Calculator className="w-4 h-4 shrink-0" />,
   TrendingUp: <TrendingUp className="w-4 h-4 shrink-0" />,

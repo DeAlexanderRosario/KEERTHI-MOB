@@ -1,0 +1,10 @@
+{
+  "doctype": "Number Card",
+  "name": "Open Warehouse Discrepancies",
+  "label": "Open Warehouse Discrepancies",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Warehouse Discrepancy",
+  "function": "Count",
+  "filters_json": "[[\"Warehouse Discrepancy\",\"resolution_status\",\"=\",\"Pending Resolution\",false]]"
+}

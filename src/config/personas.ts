@@ -48,6 +48,20 @@ export const PERSONA_DEFINITIONS: PersonaDefinition[] = [
     defaultModule: 'stock',
   },
   {
+    key: 'field_sales_agent',
+    label: 'Field Sales Agent',
+    description: 'Onboarding retail shops, taking orders on-site, and capturing payment collections',
+    targetErpRoles: ['Field Sales Agent'],
+    defaultModule: 'field_sales',
+  },
+  {
+    key: 'driver',
+    label: 'Delivery Driver',
+    description: 'Assigned delivery trips, shop storefront verification, arrival, and POD submission',
+    targetErpRoles: ['Driver'],
+    defaultModule: 'delivery',
+  },
+  {
     key: 'delivery_staff',
     label: 'Delivery Staff',
     description: 'Delivery dispatch queue, trip updates, and order confirmations',

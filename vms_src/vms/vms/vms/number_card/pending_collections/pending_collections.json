@@ -1,0 +1,10 @@
+{
+  "doctype": "Number Card",
+  "name": "Pending Collections",
+  "label": "Collections Pending Verification",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Payment Collection",
+  "function": "Count",
+  "filters_json": "[[\"Payment Collection\",\"status\",\"=\",\"Submitted\",false]]"
+}

@@ -1,0 +1,11 @@
+vms.patches.create_custom_fields
+vms.patches.ensure_delivery_note_links
+vms.patches.create_keerthi_pod_custom_fields
+vms.patches.create_vms_print_formats
+vms.patches.create_vms_workspace
+vms.patches.create_vms_dock_entry
+vms.patches.v2_item_level_pod_and_allocation_fixes
+vms.patches.v4_pod_unification_and_mobile_control_sync
+vms.patches.v16_0.reconcile_vms_doctypes
+vms.patches.v16_0.purge_driver_cod_schema
+vms.patches.v16_0.fix_workspace_shortcuts

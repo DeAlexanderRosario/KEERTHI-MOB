@@ -1,0 +1,27 @@
+{
+  "name": "Proof of Delivery Photo",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "category",
+      "label": "Category",
+      "fieldtype": "Select",
+      "options": "Delivery Evidence\nGate Check\nDamaged Item\nCustomer Premises",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "photo_url",
+      "label": "Photo Attachment",
+      "fieldtype": "AttachImage",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "remarks",
+      "label": "Remarks",
+      "fieldtype": "Data"
+    }
+  ],
+  "permissions": []
+}

@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%">
+  <defs>
+    <linearGradient id="truckBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b7a3e" />
+      <stop offset="50%" stop-color="#12592c" />
+      <stop offset="100%" stop-color="#0b381b" />
+    </linearGradient>
+    <linearGradient id="cabinGreen" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#2ddb5b" />
+      <stop offset="40%" stop-color="#1aa044" />
+      <stop offset="100%" stop-color="#0f5c27" />
+    </linearGradient>
+    <linearGradient id="windshield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.6" />
+    </linearGradient>
+    <linearGradient id="cargoMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#223326" />
+      <stop offset="25%" stop-color="#18241c" />
+      <stop offset="75%" stop-color="#141c16" />
+      <stop offset="100%" stop-color="#0a0e0b" />
+    </linearGradient>
+    <linearGradient id="chromeGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94a3b8" />
+      <stop offset="50%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#64748b" />
+    </linearGradient>
+    <radialGradient id="wheelRubber" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="70%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    <radialGradient id="wheelRim" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f1f5f9" />
+      <stop offset="45%" stop-color="#94a3b8" />
+      <stop offset="70%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+    <filter id="truckShadow" x="-10%" y="-10%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#05140b" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Ambient Ground Shadow -->
+  <ellipse cx="310" cy="285" rx="260" ry="22" fill="#000000" opacity="0.35" filter="blur(6px)" />
+  <ellipse cx="280" cy="280" rx="210" ry="14" fill="#03180c" opacity="0.5" />
+
+  <!-- MAIN GROUP WITH 3D PERSPECTIVE ANGLE -->
+  <g filter="url(#truckShadow)">
+    <!-- Cargo Box / Container -->
+    <path d="M70,85 L280,68 L285,225 L75,235 Z" fill="url(#cargoMetal)" />
+    <!-- Cargo Box Top Highlight -->
+    <path d="M70,85 L280,68 L270,62 L78,78 Z" fill="#2d4233" opacity="0.6" />
+    <!-- Cargo Side Ribs / Details -->
+    <line x1="120" y1="81" x2="124" y2="231" stroke="#2a3d2e" stroke-width="3" />
+    <line x1="170" y1="77" x2="173" y2="228" stroke="#2a3d2e" stroke-width="3" />
+    <line x1="220" y1="73" x2="223" y2="226" stroke="#2a3d2e" stroke-width="3" />
+    <!-- Keerthi Logo on Container -->
+    <rect x="100" y="115" width="140" height="46" rx="6" fill="#0e2315" stroke="#1f8b44" stroke-width="1.5" />
+    <text x="170" y="136" fill="#20d52e" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="14" text-anchor="middle" letter-spacing="2">KEERTHI</text>
+    <text x="170" y="151" fill="#a7f3d0" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="9" text-anchor="middle" letter-spacing="1">FLEET LOGISTICS</text>
+
+    <!-- Cabin Body -->
+    <path d="M280,68 L440,60 L495,130 L520,205 L525,240 L285,245 Z" fill="url(#cabinGreen)" />
+
+    <!-- Aerodynamic Roof Fairing -->
+    <path d="M275,68 L420,40 L455,60 L285,68 Z" fill="#23bd4b" />
+    <path d="M300,50 L410,36 L415,48 L305,58 Z" fill="#34e865" opacity="0.7" />
+
+    <!-- Windshield -->
+    <path d="M360,70 L445,64 L482,125 L380,128 Z" fill="url(#windshield)" stroke="#114a21" stroke-width="3" />
+    <!-- Windshield reflection glint -->
+    <path d="M375,76 L435,70 L425,120 L385,122 Z" fill="#ffffff" opacity="0.12" />
+
+    <!-- Side Window & A-Pillar -->
+    <path d="M300,75 L355,72 L372,128 L302,130 Z" fill="#0f172a" stroke="#12592c" stroke-width="2" />
+    <path d="M312,82 L345,79 L358,122 L314,124 Z" fill="#38bdf8" opacity="0.25" />
+
+    <!-- Door Line & Handle -->
+    <path d="M295,73 L298,225" stroke="#0b381b" stroke-width="2" />
+    <rect x="312" y="145" width="22" height="6" rx="2" fill="#0a2612" stroke="#20d52e" stroke-width="1" />
+
+    <!-- Front Grille & Heavy-Duty Bumper -->
+    <path d="M485,135 L516,195 L522,238 L450,242 L440,135 Z" fill="#0f172a" />
+    <!-- Horizontal Chrome Grille Slats -->
+    <rect x="455" y="145" width="55" height="5" rx="2" fill="url(#chromeGlow)" />
+    <rect x="458" y="157" width="54" height="5" rx="2" fill="url(#chromeGlow)" />
+    <rect x="461" y="169" width="53" height="5" rx="2" fill="url(#chromeGlow)" />
+    <rect x="464" y="181" width="52" height="5" rx="2" fill="url(#chromeGlow)" />
+    <!-- Front Brand Emblem -->
+    <circle cx="488" cy="163" r="8" fill="#15803d" stroke="#f8fafc" stroke-width="1.5" />
+    <text x="488" y="167" fill="#ffffff" font-family="sans-serif" font-weight="900" font-size="9" text-anchor="middle">K</text>
+
+    <!-- Headlights & LED DRLs -->
+    <polygon points="510,195 528,208 522,225 506,215" fill="#f8fafc" filter="drop-shadow(0 0 6px #6ee7b7)" />
+    <polygon points="445,198 456,204 454,218 443,212" fill="#f8fafc" opacity="0.9" />
+
+    <!-- Side Mirror -->
+    <path d="M375,100 L395,95 L398,125 L378,122 Z" fill="#061c0d" stroke="#22c55e" stroke-width="1" />
+    <line x1="365" y1="105" x2="378" y2="108" stroke="#000000" stroke-width="3" />
+
+    <!-- Side Underrun Protection / Fuel Tank -->
+    <rect x="195" y="222" width="65" height="24" rx="4" fill="url(#chromeGlow)" stroke="#334155" stroke-width="1.5" />
+    <circle cx="210" cy="234" r="4" fill="#0f172a" />
+
+    <!-- Tool Box -->
+    <rect x="135" y="224" width="45" height="20" rx="3" fill="#1e293b" stroke="#475569" stroke-width="1" />
+
+    <!-- Wheel 1 (Rear Outer) -->
+    <g transform="translate(115, 245)">
+      <circle cx="0" cy="0" r="38" fill="url(#wheelRubber)" />
+      <circle cx="0" cy="0" r="23" fill="url(#wheelRim)" />
+      <circle cx="0" cy="0" r="10" fill="#0f172a" stroke="#cbd5e1" stroke-width="2" />
+      <!-- Hub Bolts -->
+      <circle cx="0" cy="-6" r="2" fill="#f8fafc" />
+      <circle cx="6" cy="0" r="2" fill="#f8fafc" />
+      <circle cx="0" cy="6" r="2" fill="#f8fafc" />
+      <circle cx="-6" cy="0" r="2" fill="#f8fafc" />
+    </g>
+
+    <!-- Wheel 2 (Rear Inner/Tandem) -->
+    <g transform="translate(195, 245)">
+      <circle cx="0" cy="0" r="38" fill="url(#wheelRubber)" />
+      <circle cx="0" cy="0" r="23" fill="url(#wheelRim)" />
+      <circle cx="0" cy="0" r="10" fill="#0f172a" stroke="#cbd5e1" stroke-width="2" />
+      <circle cx="0" cy="-6" r="2" fill="#f8fafc" />
+      <circle cx="6" cy="0" r="2" fill="#f8fafc" />
+      <circle cx="0" cy="6" r="2" fill="#f8fafc" />
+      <circle cx="-6" cy="0" r="2" fill="#f8fafc" />
+    </g>
+
+    <!-- Wheel 3 (Front Steer Axle) -->
+    <g transform="translate(465, 248)">
+      <circle cx="0" cy="0" r="38" fill="url(#wheelRubber)" />
+      <circle cx="0" cy="0" r="23" fill="url(#wheelRim)" />
+      <circle cx="0" cy="0" r="11" fill="#0f172a" stroke="#cbd5e1" stroke-width="2.5" />
+      <circle cx="0" cy="-7" r="2" fill="#f8fafc" />
+      <circle cx="7" cy="0" r="2" fill="#f8fafc" />
+      <circle cx="0" cy="7" r="2" fill="#f8fafc" />
+      <circle cx="-7" cy="0" r="2" fill="#f8fafc" />
+    </g>
+  </g>
+</svg>

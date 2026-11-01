@@ -1,0 +1,124 @@
+{
+  "name": "Vehicle Allocation",
+  "doctype": "DocType",
+  "module": "VMS",
+  "is_submittable": 1,
+  "autoname": "format:VA-.YYYY.-.#####",
+  "naming_rule": "Expression",
+  "fields": [
+    {
+      "fieldname": "vehicle",
+      "label": "Vehicle",
+      "fieldtype": "Link",
+      "options": "Vehicle",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "driver",
+      "label": "Driver",
+      "fieldtype": "Link",
+      "options": "Driver",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "route",
+      "label": "Route",
+      "fieldtype": "Link",
+      "options": "Route",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "delivery_date",
+      "label": "Delivery Date",
+      "fieldtype": "Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "col_break1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Draft\nIn Progress\nLoading Verified\nDiscrepancy Reported\nReady for Dispatch\nDispatched\nCancelled",
+      "default": "Draft",
+      "allow_on_submit": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "total_weight_kg",
+      "label": "Total Allocated Weight (kg)",
+      "fieldtype": "Float",
+      "read_only": 1
+    },
+    {
+      "fieldname": "max_capacity_kg",
+      "label": "Vehicle Capacity (kg)",
+      "fieldtype": "Float",
+      "read_only": 1
+    },
+    {
+      "fieldname": "loading_verified_by",
+      "label": "Loading Verified By",
+      "fieldtype": "Link",
+      "options": "User",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "dispatch_approved_by",
+      "label": "Dispatch Approved By",
+      "fieldtype": "Link",
+      "options": "User",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "dispatch_approved_at",
+      "label": "Dispatch Approved At",
+      "fieldtype": "Datetime",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_orders",
+      "label": "Allocated Sales Orders",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "orders",
+      "label": "Orders",
+      "fieldtype": "Table",
+      "options": "Vehicle Allocation Order",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Dispatcher",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "role": "Warehouse User",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ]
+}

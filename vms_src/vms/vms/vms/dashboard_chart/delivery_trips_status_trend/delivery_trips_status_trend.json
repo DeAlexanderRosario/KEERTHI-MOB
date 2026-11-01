@@ -1,0 +1,12 @@
+{
+  "doctype": "Dashboard Chart",
+  "name": "Delivery Trips Status Trend",
+  "chart_name": "Trips by Status",
+  "module": "VMS",
+  "is_standard": 1,
+  "chart_type": "Group By",
+  "document_type": "Delivery Trip",
+  "group_by_based_on": "status",
+  "aggregate_function_based_on": "name",
+  "type": "Donut"
+}

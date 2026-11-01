@@ -25,6 +25,7 @@ import {
   Layers,
   ArrowUpRight,
   ShieldAlert,
+  Store,
 } from 'lucide-react';
 import { documentService } from '../../services/documentService';
 import { authService } from '../../services/authService';
@@ -554,6 +555,59 @@ export function DashboardModule({ onNavigateModule, onOpenLogin }: DashboardModu
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Field Operations & Driver Quick Launch (VMS End-to-End Flow) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            <button
+              onClick={() => onNavigateModule('field_sales')}
+              className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-[#20D52E] hover:shadow-sm text-left transition-all group flex items-start justify-between"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-[#20D52E]/15 text-[#0B4025] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Store className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-900 group-hover:text-emerald-800">
+                      Field Sales Agent Portal
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#20D52E]/20 text-[#0B4025]">
+                      Active Flow
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                    Onboard retail shops with storefront photo, log customer visits, book sales orders, and capture payment collections.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900 shrink-0 mt-1" />
+            </button>
+
+            <button
+              onClick={() => onNavigateModule('delivery')}
+              className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-[#20D52E] hover:shadow-sm text-left transition-all group flex items-start justify-between"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 text-[#20D52E] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-900 group-hover:text-emerald-800">
+                      Driver Delivery Portal
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                      Trip POD
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                    Inspect assigned dispatch, identify shops by storefront photo, record arrival, and capture digital POD with zero COD.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900 shrink-0 mt-1" />
+            </button>
           </div>
 
           {/* Quick Stat Cards */}

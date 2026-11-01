@@ -1,0 +1,15 @@
+{
+  "version": "16.0.0",
+  "app": "vms",
+  "allowed_endpoints": [
+    "vms.api.driver_portal.get_assigned_trips",
+    "vms.api.driver_portal.start_trip",
+    "vms.api.driver_portal.arrive_at_stop",
+    "vms.api.driver_portal.submit_proof_of_delivery",
+    "vms.api.field_sales.record_shop_visit",
+    "vms.api.field_sales.register_customer_onboarding",
+    "vms.api.field_sales.record_payment_collection",
+    "vms.api.field_sales.get_customer_outstanding",
+    "vms.api.mobile_control_integration.sync_mobile_data"
+  ]
+}

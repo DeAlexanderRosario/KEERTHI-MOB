@@ -1,0 +1,12 @@
+{
+  "doctype": "Dashboard Chart",
+  "name": "Warehouse Discrepancies by Type",
+  "chart_name": "Warehouse Discrepancies by Type",
+  "module": "VMS",
+  "is_standard": 1,
+  "chart_type": "Group By",
+  "document_type": "Warehouse Discrepancy",
+  "group_by_based_on": "discrepancy_type",
+  "aggregate_function_based_on": "name",
+  "type": "Donut"
+}

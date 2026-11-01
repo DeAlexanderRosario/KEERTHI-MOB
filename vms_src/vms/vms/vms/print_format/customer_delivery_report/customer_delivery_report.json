@@ -1,0 +1,9 @@
+{
+  "doctype": "Print Format",
+  "name": "Customer Delivery Report",
+  "module": "VMS",
+  "doc_type": "Proof of Delivery",
+  "standard": "Yes",
+  "print_format_type": "Jinja",
+  "html": "<h3>Customer Delivery Summary: {{ doc.customer_name }}</h3><p>POD: {{ doc.name }}</p>"
+}

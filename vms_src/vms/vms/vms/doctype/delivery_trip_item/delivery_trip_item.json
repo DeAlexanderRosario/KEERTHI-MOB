@@ -1,0 +1,65 @@
+{
+  "name": "Delivery Trip Item",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "sales_order",
+      "label": "Sales Order",
+      "fieldtype": "Link",
+      "options": "Sales Order",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "sales_order_item",
+      "label": "Sales Order Item",
+      "fieldtype": "Link",
+      "options": "Sales Order Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_code",
+      "label": "Item Code",
+      "fieldtype": "Link",
+      "options": "Item",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_name",
+      "label": "Item Name",
+      "fieldtype": "Data",
+      "fetch_from": "item_code.item_name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "allocated_qty",
+      "label": "Allocated Qty",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "uom",
+      "label": "UOM",
+      "fieldtype": "Link",
+      "options": "UOM",
+      "fetch_from": "item_code.stock_uom"
+    },
+    {
+      "fieldname": "warehouse",
+      "label": "Warehouse",
+      "fieldtype": "Link",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "stop_reference",
+      "label": "Stop Ref",
+      "fieldtype": "Data"
+    }
+  ],
+  "permissions": []
+}

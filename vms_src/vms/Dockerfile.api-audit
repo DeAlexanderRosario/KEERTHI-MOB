@@ -1,0 +1,12 @@
+FROM custom:16-mobile-apps
+
+USER root
+RUN rm -rf \
+    /home/frappe/frappe-bench/apps/vms/vms/vms/workspace/vehicle_management \
+    /home/frappe/frappe-bench/apps/vms/vms/vms/workspace/__pycache__
+COPY --chown=frappe:frappe vms/ /home/frappe/frappe-bench/apps/vms/vms/
+COPY --chown=frappe:frappe API_WORKFLOW_AUDIT.md /home/frappe/frappe-bench/apps/vms/API_WORKFLOW_AUDIT.md
+USER frappe
+WORKDIR /home/frappe/frappe-bench
+RUN bench build --app vms && \
+    ln -sfn /home/frappe/frappe-bench/apps/vms/vms/public /home/frappe/frappe-bench/assets/vms

@@ -5,6 +5,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { MobileFloatingNav } from './components/layout/MobileFloatingNav';
 import { LoginPage } from './components/auth/LoginPage';
 import { DashboardModule } from './components/modules/DashboardModule';
+import { FieldSalesWorkspace } from './components/vms/FieldSalesWorkspace';
 import { BillingModule } from './components/modules/BillingModule';
 import { AccountsModule } from './components/modules/AccountsModule';
 import { SalesModule } from './components/modules/SalesModule';
@@ -110,6 +111,8 @@ export default function App() {
               onOpenLogin={() => setViewMode('login')}
             />
           )}
+
+          {activeModuleId === 'field_sales' && <FieldSalesWorkspace />}
 
           {activeModuleId === 'billing' && <BillingModule />}
 

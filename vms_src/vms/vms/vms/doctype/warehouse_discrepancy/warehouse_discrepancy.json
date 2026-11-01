@@ -1,0 +1,94 @@
+{
+  "name": "Warehouse Discrepancy",
+  "doctype": "DocType",
+  "module": "VMS",
+  "autoname": "format:WHD-.YYYY.-.#####",
+  "naming_rule": "Expression",
+  "fields": [
+    {
+      "fieldname": "vehicle_allocation",
+      "label": "Vehicle Allocation",
+      "fieldtype": "Link",
+      "options": "Vehicle Allocation",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sales_order",
+      "label": "Sales Order",
+      "fieldtype": "Link",
+      "options": "Sales Order",
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_code",
+      "label": "Item Code",
+      "fieldtype": "Link",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "discrepancy_type",
+      "label": "Discrepancy Type",
+      "fieldtype": "Select",
+      "options": "Short\nOverage\nDamaged\nWrong Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "allocated_qty",
+      "label": "Allocated Qty",
+      "fieldtype": "Float",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "loaded_qty",
+      "label": "Physically Loaded Qty",
+      "fieldtype": "Float",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "discrepancy_qty",
+      "label": "Discrepancy (Loaded - Alloc)",
+      "fieldtype": "Float",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "reason",
+      "label": "Reason",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "resolution_notes",
+      "label": "Resolution Notes",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "resolution_status",
+      "label": "Resolution Status",
+      "fieldtype": "Select",
+      "options": "Pending Resolution\nResolved\nRejected",
+      "default": "Pending Resolution"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Warehouse User",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "Warehouse Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    }
+  ]
+}

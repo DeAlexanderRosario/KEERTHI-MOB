@@ -1,0 +1,54 @@
+{
+  "name": "Route",
+  "doctype": "DocType",
+  "module": "VMS",
+  "autoname": "field:route_name",
+  "fields": [
+    {
+      "fieldname": "route_name",
+      "label": "Route Name",
+      "fieldtype": "Data",
+      "unique": 1,
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "territory",
+      "label": "Territory",
+      "fieldtype": "Link",
+      "options": "Territory",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "estimated_distance_km",
+      "label": "Est Distance (km)",
+      "fieldtype": "Float"
+    },
+    {
+      "fieldname": "estimated_duration_hours",
+      "label": "Est Duration (Hours)",
+      "fieldtype": "Float"
+    },
+    {
+      "fieldname": "active",
+      "label": "Active",
+      "fieldtype": "Check",
+      "default": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Dispatcher",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    }
+  ]
+}

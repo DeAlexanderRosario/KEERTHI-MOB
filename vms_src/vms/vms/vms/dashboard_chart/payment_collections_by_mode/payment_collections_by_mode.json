@@ -1,0 +1,12 @@
+{
+  "doctype": "Dashboard Chart",
+  "name": "Payment Collections by Mode",
+  "chart_name": "Collections by Payment Mode",
+  "module": "VMS",
+  "is_standard": 1,
+  "chart_type": "Group By",
+  "document_type": "Payment Collection",
+  "group_by_based_on": "mode_of_payment",
+  "aggregate_function_based_on": "amount",
+  "type": "Pie"
+}

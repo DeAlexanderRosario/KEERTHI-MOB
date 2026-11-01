@@ -1,0 +1,17 @@
+{
+  "name": "Vehicle Allocation Territory",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "territory",
+      "label": "Territory",
+      "fieldtype": "Link",
+      "options": "Territory",
+      "in_list_view": 1,
+      "reqd": 1
+    }
+  ],
+  "permissions": []
+}

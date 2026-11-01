@@ -1,0 +1,10 @@
+{
+  "doctype": "Number Card",
+  "name": "Active Delivery Trips",
+  "label": "Active Delivery Trips",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Delivery Trip",
+  "function": "Count",
+  "filters_json": "[[\"Delivery Trip\",\"status\",\"=\",\"In Transit\",false]]"
+}

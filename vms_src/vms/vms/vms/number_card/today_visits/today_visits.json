@@ -1,0 +1,10 @@
+{
+  "doctype": "Number Card",
+  "name": "Today Visits",
+  "label": "Today Visits",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Shop Visit",
+  "function": "Count",
+  "filters_json": "[]"
+}

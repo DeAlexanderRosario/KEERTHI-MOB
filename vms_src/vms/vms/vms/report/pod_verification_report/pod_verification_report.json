@@ -1,0 +1,9 @@
+{
+  "doctype": "Report",
+  "name": "POD Verification Report",
+  "report_name": "POD Verification Report",
+  "report_type": "Script Report",
+  "is_standard": "Yes",
+  "module": "VMS",
+  "ref_doctype": "Proof of Delivery"
+}

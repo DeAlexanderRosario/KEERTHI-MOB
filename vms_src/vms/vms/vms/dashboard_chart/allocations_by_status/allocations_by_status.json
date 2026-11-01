@@ -1,0 +1,12 @@
+{
+  "doctype": "Dashboard Chart",
+  "name": "Allocations by Status",
+  "chart_name": "Allocations by Status",
+  "module": "VMS",
+  "is_standard": 1,
+  "chart_type": "Group By",
+  "document_type": "Vehicle Allocation",
+  "group_by_based_on": "status",
+  "aggregate_function_based_on": "name",
+  "type": "Donut"
+}

@@ -1,0 +1,45 @@
+{
+  "name": "VMS POD Settings",
+  "doctype": "DocType",
+  "module": "VMS",
+  "issingle": 1,
+  "fields": [
+    {
+      "fieldname": "require_customer_signature",
+      "label": "Require Customer Signature",
+      "fieldtype": "Check",
+      "default": 1
+    },
+    {
+      "fieldname": "allow_partial_delivery",
+      "label": "Allow Partial Delivery",
+      "fieldtype": "Check",
+      "default": 1
+    },
+    {
+      "fieldname": "require_delivery_photo",
+      "label": "Require Photo Evidence",
+      "fieldtype": "Check",
+      "default": 1
+    },
+    {
+      "fieldname": "geofence_radius_meters",
+      "label": "Geofence Verification Radius (meters)",
+      "fieldtype": "Int",
+      "default": 500
+    },
+    {
+      "fieldname": "max_upload_size_mb",
+      "label": "Max Attachment Size (MB)",
+      "fieldtype": "Int",
+      "default": 10
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

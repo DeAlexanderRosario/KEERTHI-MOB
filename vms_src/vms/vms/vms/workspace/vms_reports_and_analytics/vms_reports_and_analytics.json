@@ -1,0 +1,102 @@
+{
+  "doctype": "Workspace",
+  "name": "VMS Reports & Analytics",
+  "title": "VMS Reports & Analytics",
+  "module": "VMS",
+  "icon": "bar-chart-2",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "VMS Executive"
+    },
+    {
+      "role": "Sales Manager"
+    },
+    {
+      "role": "Accounts Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "Delivery Trip Register",
+      "type": "Report",
+      "link_to": "Delivery Trip Register",
+      "color": "Blue"
+    },
+    {
+      "label": "POD Verification Report",
+      "type": "Report",
+      "link_to": "POD Verification Report",
+      "color": "Green"
+    },
+    {
+      "label": "Payment Collection Register",
+      "type": "Report",
+      "link_to": "Payment Collection Register",
+      "color": "Orange"
+    },
+    {
+      "label": "Warehouse Discrepancy Report",
+      "type": "Report",
+      "link_to": "Warehouse Discrepancy Report",
+      "color": "Red"
+    },
+    {
+      "label": "Sales Agent Performance",
+      "type": "Report",
+      "link_to": "Sales Agent Performance Report",
+      "color": "Purple"
+    },
+    {
+      "label": "Sales Order Delivery Status",
+      "type": "Report",
+      "link_to": "Sales Order Delivery Status",
+      "color": "Cyan"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Active Delivery Trips",
+      "number_card_name": "Active Delivery Trips"
+    },
+    {
+      "label": "Monthly Collections",
+      "number_card_name": "Monthly Collections"
+    }
+  ],
+  "content": "[{\"id\":\"vms-vms-reports-analyt-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Delivery Trips\",\"col\":6}},{\"id\":\"vms-vms-reports-analyt-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Monthly Collections\",\"col\":6}},{\"id\":\"vms-vms-reports-analyt-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Trip Register\",\"col\":4}},{\"id\":\"vms-vms-reports-analyt-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POD Verification Report\",\"col\":4}},{\"id\":\"vms-vms-reports-analyt-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Collection Register\",\"col\":4}},{\"id\":\"vms-vms-reports-analyt-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Warehouse Discrepancy Report\",\"col\":4}},{\"id\":\"vms-vms-reports-analyt-shortcut-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Agent Performance\",\"col\":4}},{\"id\":\"vms-vms-reports-analyt-shortcut-6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order Delivery Status\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Trips by Status",
+      "chart_name": "Trips by Status"
+    },
+    {
+      "label": "Deliveries by Route",
+      "chart_name": "Deliveries by Route"
+    },
+    {
+      "label": "Payment Collections by Mode",
+      "chart_name": "Payment Collections by Mode"
+    },
+    {
+      "label": "Allocations by Status",
+      "chart_name": "Allocations by Status"
+    },
+    {
+      "label": "Warehouse Discrepancies by Type",
+      "chart_name": "Warehouse Discrepancies by Type"
+    }
+  ]
+}

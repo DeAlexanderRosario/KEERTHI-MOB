@@ -1,0 +1,97 @@
+{
+  "name": "Delivery Trip Stop",
+  "doctype": "DocType",
+  "module": "VMS",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "stop_sequence",
+      "label": "Seq",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "customer",
+      "label": "Customer",
+      "fieldtype": "Link",
+      "options": "Customer",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "customer_name",
+      "label": "Customer Name",
+      "fieldtype": "Data",
+      "fetch_from": "customer.customer_name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "address",
+      "label": "Delivery Address",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "contact_phone",
+      "label": "Contact Phone",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Pending\nArrived\nDelivered\nPartially Delivered\nFailed\nRescheduled",
+      "default": "Pending",
+      "allow_on_submit": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "arrival_time",
+      "label": "Arrival Time",
+      "fieldtype": "Datetime",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "arrival_lat",
+      "label": "Latitude",
+      "fieldtype": "Float",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "arrival_lng",
+      "label": "Longitude",
+      "fieldtype": "Float",
+      "allow_on_submit": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "failure_reason",
+      "label": "Failure Reason",
+      "fieldtype": "Small Text",
+      "allow_on_submit": 1
+    },
+    {
+      "fieldname": "rescheduled_date",
+      "label": "Requested Reschedule Date",
+      "fieldtype": "Date",
+      "allow_on_submit": 1
+    },
+    {
+      "fieldname": "reschedule_reason",
+      "label": "Reschedule Reason",
+      "fieldtype": "Small Text",
+      "allow_on_submit": 1
+    },
+    {
+      "fieldname": "pod_reference",
+      "label": "POD Reference",
+      "fieldtype": "Link",
+      "options": "Proof of Delivery",
+      "allow_on_submit": 1,
+      "read_only": 1
+    }
+  ],
+  "permissions": []
+}

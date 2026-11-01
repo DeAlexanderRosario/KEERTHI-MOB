@@ -1,0 +1,23 @@
+{
+  "name": "Keerthi ERP - Mobile Field Sales & Driver Delivery",
+  "short_name": "Keerthi ERP",
+  "description": "Keerthi Hardwares ERPNext Field Sales Onboarding, Visits, Orders, Collections, and Driver Delivery POD Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090B0A",
+  "theme_color": "#20D52E",
+  "icons": [
+    {
+      "src": "/assets/aistudio/image_e3382820.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/aistudio/image_e3382820.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

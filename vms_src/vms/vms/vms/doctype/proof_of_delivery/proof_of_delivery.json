@@ -1,0 +1,181 @@
+{
+  "name": "Proof of Delivery",
+  "doctype": "DocType",
+  "module": "VMS",
+  "is_submittable": 1,
+  "autoname": "format:POD-.YYYY.-.#####",
+  "naming_rule": "Expression",
+  "fields": [
+    {
+      "fieldname": "delivery_trip",
+      "label": "Delivery Trip",
+      "fieldtype": "Link",
+      "options": "Delivery Trip",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "delivery_trip_stop",
+      "label": "Stop ID",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "customer",
+      "label": "Customer",
+      "fieldtype": "Link",
+      "options": "Customer",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "customer_name",
+      "label": "Customer Name",
+      "fieldtype": "Data",
+      "fetch_from": "customer.customer_name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "col_break1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Draft\nSubmitted\nVerified\nRejected",
+      "default": "Draft",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "receiver_name",
+      "label": "Receiver Name",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "receiver_phone",
+      "label": "Receiver Phone",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "delivery_notes",
+      "label": "Delivery / Discrepancy Notes",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "server_timestamp",
+      "label": "Server Timestamp",
+      "fieldtype": "Datetime",
+      "read_only": 1
+    },
+    {
+      "fieldname": "device_timestamp",
+      "label": "Device Timestamp",
+      "fieldtype": "Datetime",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_evidence",
+      "label": "Evidence & Audit Hash",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "gps_latitude",
+      "label": "GPS Latitude",
+      "fieldtype": "Float",
+      "read_only": 1
+    },
+    {
+      "fieldname": "gps_longitude",
+      "label": "GPS Longitude",
+      "fieldtype": "Float",
+      "read_only": 1
+    },
+    {
+      "fieldname": "signature_data",
+      "label": "Digital Signature",
+      "fieldtype": "Long Text"
+    },
+    {
+      "fieldname": "audit_hash",
+      "label": "Cryptographic Audit Seal (SHA-256)",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "section_items",
+      "label": "Items Delivered & Quantity Verification",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "items",
+      "label": "Items",
+      "fieldtype": "Table",
+      "options": "Proof of Delivery Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_photos",
+      "label": "Delivery Photographs",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "photos",
+      "label": "Photographs",
+      "fieldtype": "Table",
+      "options": "Proof of Delivery Photo"
+    },
+    {
+      "fieldname": "photo_gallery",
+      "label": "Evidence Preview",
+      "fieldtype": "HTML"
+    },
+    {
+      "fieldname": "section_audit",
+      "label": "Accounts & Verification",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "verified_by",
+      "label": "Verified By",
+      "fieldtype": "Link",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "verification_notes",
+      "label": "Verification Notes",
+      "fieldtype": "Small Text"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Driver",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1
+    },
+    {
+      "role": "Dispatcher",
+      "read": 1,
+      "write": 1,
+      "submit": 1
+    },
+    {
+      "role": "Accounts User",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ]
+}

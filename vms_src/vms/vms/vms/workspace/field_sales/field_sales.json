@@ -1,0 +1,83 @@
+{
+  "doctype": "Workspace",
+  "name": "Field Sales",
+  "title": "Field Sales",
+  "module": "VMS",
+  "icon": "users",
+  "public": 1,
+  "is_standard": 1,
+  "roles": [
+    {
+      "role": "Field Sales Agent"
+    },
+    {
+      "role": "Sales Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "shortcuts": [
+    {
+      "label": "My Assigned Customers",
+      "type": "DocType",
+      "link_to": "Customer",
+      "color": "Blue"
+    },
+    {
+      "label": "Sales Visit & Order Capture",
+      "type": "DocType",
+      "link_to": "Shop Visit",
+      "color": "Green"
+    },
+    {
+      "label": "Customer Onboarding Request",
+      "type": "DocType",
+      "link_to": "Customer Onboarding Request",
+      "color": "Purple"
+    },
+    {
+      "label": "Record Payment Collection",
+      "type": "DocType",
+      "link_to": "Payment Collection",
+      "color": "Orange"
+    },
+    {
+      "label": "My Sales Orders",
+      "type": "DocType",
+      "link_to": "Sales Order",
+      "color": "Cyan"
+    },
+    {
+      "label": "Collection Follow-up",
+      "type": "DocType",
+      "link_to": "Collection Follow Up",
+      "color": "Red"
+    }
+  ],
+  "links": [
+    {
+      "label": "Operational Records",
+      "type": "Card Break",
+      "icon": "layers"
+    }
+  ],
+  "number_cards": [
+    {
+      "label": "Today Visits",
+      "number_card_name": "Today Visits"
+    },
+    {
+      "label": "Pending Collections",
+      "number_card_name": "Pending Collections"
+    }
+  ],
+  "content": "[{\"id\":\"vms-field-sales-metric-1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Today Visits\",\"col\":6}},{\"id\":\"vms-field-sales-metric-2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Collections\",\"col\":6}},{\"id\":\"vms-field-sales-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"My Assigned Customers\",\"col\":4}},{\"id\":\"vms-field-sales-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Visit & Order Capture\",\"col\":4}},{\"id\":\"vms-field-sales-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer Onboarding Request\",\"col\":4}},{\"id\":\"vms-field-sales-shortcut-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Record Payment Collection\",\"col\":4}},{\"id\":\"vms-field-sales-shortcut-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"My Sales Orders\",\"col\":4}},{\"id\":\"vms-field-sales-shortcut-6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Collection Follow-up\",\"col\":4}}]",
+  "indicator_color": "green",
+  "charts": [
+    {
+      "label": "Shop Visits by Purpose",
+      "chart_name": "Shop Visits by Purpose"
+    }
+  ]
+}

@@ -888,3 +888,59 @@ erpRouter.post('/attachments/upload', async (req: Request, res: Response) => {
     return res.status(502).json({ error: 'Could not upload attachment.', details: err.message });
   }
 });
+
+/**
+ * ALL /api/erp/method/:methodName(*)
+ * Forwards requests to Frappe / VMS whitelisted Python methods (/api/method/<methodName>)
+ */
+erpRouter.all('/method/:methodName(*)', async (req: Request, res: Response) => {
+  const methodName = req.params.methodName;
+  if (!methodName) {
+    return res.status(400).json({ error: 'Method name is required.' });
+  }
+
+  const cookies = getUpstreamCookies(req);
+  const csrf = getUpstreamCsrf(req);
+
+  try {
+    const queryStr = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    const targetUrl = getTargetUrl(`/api/method/${methodName}${queryStr}`);
+
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (cookies) headers['Cookie'] = cookies;
+    if (csrf) headers['X-Frappe-CSRF-Token'] = csrf;
+
+    const fetchOptions: RequestInit = {
+      method: req.method,
+      headers,
+    };
+
+    if (['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase())) {
+      headers['Content-Type'] = req.headers['content-type'] || 'application/json';
+      fetchOptions.body = typeof req.body === 'object' ? JSON.stringify(req.body) : req.body;
+    }
+
+    const upstreamRes = await fetch(targetUrl, fetchOptions);
+    const text = await upstreamRes.text();
+    let body: any = null;
+    try {
+      body = text ? JSON.parse(text) : {};
+    } catch {
+      body = { message: text };
+    }
+
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).json(body);
+    }
+
+    return res.json(body);
+  } catch (err: any) {
+    return res.status(502).json({
+      error: `Could not execute method ${methodName}.`,
+      details: err.message,
+    });
+  }
+});
+

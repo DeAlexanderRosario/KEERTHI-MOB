@@ -1,0 +1,9 @@
+{
+  "doctype": "Print Format",
+  "name": "Consolidated Delivery History",
+  "module": "VMS",
+  "doc_type": "Delivery Trip",
+  "standard": "Yes",
+  "print_format_type": "Jinja",
+  "html": "<h3>Consolidated Trip Delivery Log: {{ doc.name }}</h3>"
+}

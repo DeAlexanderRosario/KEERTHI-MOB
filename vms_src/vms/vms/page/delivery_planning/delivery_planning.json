@@ -1,0 +1,24 @@
+{
+  "content": null,
+  "creation": "2026-10-31 10:00:00",
+  "docstatus": 0,
+  "doctype": "Page",
+  "idx": 0,
+  "modified": "2026-10-31 10:00:00",
+  "module": "VMS",
+  "name": "delivery_planning",
+  "page_name": "delivery_planning",
+  "roles": [
+    {
+      "role": "Dispatcher"
+    },
+    {
+      "role": "Fleet Manager"
+    },
+    {
+      "role": "System Manager"
+    }
+  ],
+  "standard": "Yes",
+  "title": "Delivery Planning Console"
+}

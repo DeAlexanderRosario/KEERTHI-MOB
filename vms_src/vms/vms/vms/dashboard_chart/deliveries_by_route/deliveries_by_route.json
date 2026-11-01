@@ -1,0 +1,12 @@
+{
+  "doctype": "Dashboard Chart",
+  "name": "Deliveries by Route",
+  "chart_name": "Deliveries by Route",
+  "module": "VMS",
+  "is_standard": 1,
+  "chart_type": "Group By",
+  "document_type": "Delivery Trip",
+  "group_by_based_on": "route",
+  "aggregate_function_based_on": "name",
+  "type": "Bar"
+}

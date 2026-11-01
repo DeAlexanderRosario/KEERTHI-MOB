@@ -1,0 +1,9 @@
+{
+  "doctype": "Report",
+  "name": "Payment Collection Register",
+  "report_name": "Payment Collection Register",
+  "report_type": "Script Report",
+  "is_standard": "Yes",
+  "module": "VMS",
+  "ref_doctype": "Payment Collection"
+}

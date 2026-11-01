@@ -1,0 +1,10 @@
+{
+  "doctype": "Number Card",
+  "name": "Orders Awaiting Allocation",
+  "label": "Orders Awaiting Allocation",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Vehicle Allocation",
+  "function": "Count",
+  "filters_json": "[[\"Vehicle Allocation\",\"status\",\"=\",\"Draft\",false]]"
+}

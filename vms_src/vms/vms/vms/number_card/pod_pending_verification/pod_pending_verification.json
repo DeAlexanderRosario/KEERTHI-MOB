@@ -1,0 +1,10 @@
+{
+  "doctype": "Number Card",
+  "name": "POD Pending Verification",
+  "label": "PODs Pending Verification",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Proof of Delivery",
+  "function": "Count",
+  "filters_json": "[[\"Proof of Delivery\",\"status\",\"=\",\"Submitted\",false]]"
+}

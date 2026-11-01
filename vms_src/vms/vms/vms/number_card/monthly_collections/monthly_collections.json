@@ -1,0 +1,11 @@
+{
+  "doctype": "Number Card",
+  "name": "Monthly Collections",
+  "label": "Total Collections This Month",
+  "module": "VMS",
+  "is_standard": 1,
+  "document_type": "Payment Collection",
+  "function": "Sum",
+  "filters_json": "[[\"Payment Collection\",\"docstatus\",\"=\",\"1\",false]]",
+  "aggregate_function_based_on": "amount"
+}
