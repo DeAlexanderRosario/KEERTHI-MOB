@@ -112,7 +112,11 @@ export default function App() {
             />
           )}
 
-          {activeModuleId === 'field_sales' && <FieldSalesWorkspace />}
+          {activeModuleId === 'field_sales' && (
+            <FieldSalesWorkspace
+              onOpenOnboardingRequest={(requestName) => handleNavigate('sales', 'onboarding_request', requestName)}
+            />
+          )}
 
           {activeModuleId === 'billing' && <BillingModule />}
 
@@ -125,7 +129,7 @@ export default function App() {
 
           {activeModuleId === 'sales' && (
             <SalesModule
-              initialDocType={activeSubView === 'sales_orders' ? 'Sales Order' : 'Customer'}
+              initialDocType={activeSubView === 'onboarding_request' ? 'Customer Onboarding Request' : activeSubView === 'sales_orders' ? 'Sales Order' : 'Customer'}
               initialDocName={activeDocName}
             />
           )}

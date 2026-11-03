@@ -79,7 +79,11 @@ async function optimizeOnboardingPhoto(file: File): Promise<string> {
   }
 }
 
-export function FieldSalesWorkspace() {
+interface FieldSalesWorkspaceProps {
+  onOpenOnboardingRequest?: (requestName: string) => void;
+}
+
+export function FieldSalesWorkspace({ onOpenOnboardingRequest }: FieldSalesWorkspaceProps) {
   const user = authService.getUser();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'shops' | 'orders' | 'collections' | 'kyc'>('dashboard');
   const [timelineShopName, setTimelineShopName] = useState<string>('');
@@ -805,6 +809,15 @@ export function FieldSalesWorkspace() {
                     <div className="text-right shrink-0">
                       <div className="text-xs font-semibold text-slate-700">{request.status}</div>
                       {request.created_customer && <div className="text-[11px] text-emerald-700">Customer {request.created_customer}</div>}
+                      {onOpenOnboardingRequest && request.name && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenOnboardingRequest(String(request.name))}
+                          className="mt-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
+                        >
+                          Open request
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Table as TableIcon } from 'lucide-react';
 import { metadataService } from '../../services/metadataService';
 import { attachmentService } from '../../services/attachmentService';
+import { vmsService } from '../../services/vmsService';
 import type { DocField, DocTypeMeta } from '../../services/types';
 
 interface ChildTableEditorProps {
@@ -20,6 +21,9 @@ export function ChildTableEditor({
   const [meta, setMeta] = useState<DocTypeMeta | null>(null);
   const [columns, setColumns] = useState<DocField[]>([]);
   const [linkOptions, setLinkOptions] = useState<Record<string, Array<{ value: string; description?: string }>>>({});
+  const [salesOrderItems, setSalesOrderItems] = useState<Record<string, Array<Record<string, any>>>>({});
+  const [salesOrderItemErrors, setSalesOrderItemErrors] = useState<Record<string, string>>({});
+  const [loadingSalesOrder, setLoadingSalesOrder] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -53,6 +57,49 @@ export function ChildTableEditor({
   const handleCellChange = (rowIndex: number, fieldname: string, value: any) => {
     const updated = [...rows];
     updated[rowIndex] = { ...updated[rowIndex], [fieldname]: value };
+    if (fieldname === 'sales_order' && tableDocType === 'Vehicle Allocation Order') {
+      updated[rowIndex] = {
+        ...updated[rowIndex],
+        sales_order_item: '',
+        item_code: '',
+        customer: '',
+        warehouse: '',
+      };
+    }
+    onChange(updated);
+  };
+
+  const loadSalesOrderItems = async (salesOrder: string) => {
+    if (!salesOrder || salesOrderItems[salesOrder] || loadingSalesOrder === salesOrder) return;
+    setLoadingSalesOrder(salesOrder);
+    try {
+      const order = await vmsService.getSalesOrderAllocationItems(salesOrder);
+      setSalesOrderItems((current) => ({
+        ...current,
+        [salesOrder]: Array.isArray(order.items) ? order.items.map((item) => ({ ...item, __customer: order.customer })) : [],
+      }));
+      setSalesOrderItemErrors((current) => ({ ...current, [salesOrder]: '' }));
+    } catch (error: any) {
+      setSalesOrderItems((current) => ({ ...current, [salesOrder]: [] }));
+      setSalesOrderItemErrors((current) => ({
+        ...current,
+        [salesOrder]: error?.message || 'Could not load items for this Sales Order.',
+      }));
+    } finally {
+      setLoadingSalesOrder(null);
+    }
+  };
+
+  const chooseSalesOrderItem = (rowIndex: number, item: Record<string, any>) => {
+    const updated = [...rows];
+    updated[rowIndex] = {
+      ...updated[rowIndex],
+      sales_order_item: item.name,
+      item_code: item.item_code,
+      customer: item.__customer || item.customer || updated[rowIndex].customer,
+      warehouse: item.warehouse || updated[rowIndex].warehouse,
+      allocated_qty: item.available_qty > 0 ? item.available_qty : updated[rowIndex].allocated_qty,
+    };
     onChange(updated);
   };
 
@@ -137,6 +184,35 @@ export function ChildTableEditor({
                             onChange={(e) => handleCellChange(idx, col.fieldname, e.target.checked ? 1 : 0)}
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
+                        ) : col.fieldtype === 'Link' && col.options === 'Sales Order Item' && tableDocType === 'Vehicle Allocation Order' ? (
+                          <div className="min-w-48">
+                            <select
+                              value={val}
+                              onFocus={() => loadSalesOrderItems(String(row.sales_order || ''))}
+                              onChange={(event) => {
+                                const item = salesOrderItems[String(row.sales_order || '')]?.find((entry) => entry.name === event.target.value);
+                                if (item) chooseSalesOrderItem(idx, item);
+                              }}
+                              disabled={!row.sales_order || loadingSalesOrder === String(row.sales_order)}
+                              className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded focus:border-emerald-600 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
+                            >
+                              <option value="">
+                                {!row.sales_order ? 'Select Sales Order first' : loadingSalesOrder === String(row.sales_order) ? 'Loading order items…' : 'Select an item from this order'}
+                              </option>
+                              {val && !salesOrderItems[String(row.sales_order || '')]?.some((entry) => entry.name === val) && (
+                                <option value={val}>{row.item_code || val}</option>
+                              )}
+                              {(salesOrderItems[String(row.sales_order || '')] || []).map((item) => (
+                                <option key={item.name} value={item.name}>
+                                  {[item.item_code, item.item_name].filter(Boolean).join(' — ')} · available {item.available_qty} {item.stock_uom || ''}
+                                </option>
+                              ))}
+                            </select>
+                            {salesOrderItemErrors[String(row.sales_order || '')] && (
+                              <div className="mt-1 text-[10px] text-rose-600">{salesOrderItemErrors[String(row.sales_order || '')]}</div>
+                            )}
+                            {row.item_code && <div className="mt-1 text-[10px] text-slate-500 truncate">{row.item_code}</div>}
+                          </div>
                         ) : col.fieldtype === 'Link' && col.options ? (
                           <div className="relative min-w-36">
                             <input
@@ -144,7 +220,8 @@ export function ChildTableEditor({
                               value={val}
                               onFocus={async () => {
                                 try {
-                                  const options = await attachmentService.searchLink(col.options!, String(val || ''));
+                                  const filters = tableDocType === 'Vehicle Allocation Order' && col.fieldname === 'sales_order' ? { docstatus: 1 } : {};
+                                  const options = await attachmentService.searchLink(col.options!, String(val || ''), filters);
                                   setLinkOptions((current) => ({ ...current, [`${idx}:${col.fieldname}`]: options }));
                                 } catch { /* Keep the current value visible if lookup is unavailable. */ }
                               }}
@@ -152,7 +229,8 @@ export function ChildTableEditor({
                                 const text = e.target.value;
                                 handleCellChange(idx, col.fieldname, text);
                                 try {
-                                  const options = await attachmentService.searchLink(col.options!, text);
+                                  const filters = tableDocType === 'Vehicle Allocation Order' && col.fieldname === 'sales_order' ? { docstatus: 1 } : {};
+                                  const options = await attachmentService.searchLink(col.options!, text, filters);
                                   setLinkOptions((current) => ({ ...current, [`${idx}:${col.fieldname}`]: options }));
                                 } catch { /* Keep manual entry; ERP validates on save. */ }
                               }}

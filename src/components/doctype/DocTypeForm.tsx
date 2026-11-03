@@ -20,7 +20,7 @@ import { ErrorBanner } from '../common/ErrorBanner';
 import { ChildTableEditor } from './ChildTableEditor';
 import { CustomerDetail360 } from '../views/CustomerDetail360';
 import { EmployeeDetail360 } from '../views/EmployeeDetail360';
-import { ItemDetail360 } from '../views/ItemDetail360';
+import { ItemDetail360 } from '../views/ItemDetail360';import { authService } from '../../services/authService';import { vmsService } from '../../services/vmsService';
 import type { DocTypeMeta, DocField, ERPDocument } from '../../services/types';
 
 interface DocTypeFormProps {
@@ -47,7 +47,7 @@ export function DocTypeForm({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);  const [isReviewingOnboarding, setIsReviewingOnboarding] = useState<boolean>(false);
 
   // Link search state
   const [linkOptions, setLinkOptions] = useState<Record<string, Array<{ value: string; description?: string }>>>({});
@@ -230,7 +230,7 @@ export function DocTypeForm({
     }
   };
 
-  if (isLoading) {
+  const reviewRoles = authService.getUser()?.roles || [];  const canReviewOnboarding = doctype === 'Customer Onboarding Request'    && docstatus === 1    && ['Pending Approval', 'Changes Requested'].includes(String(formData.status || ''))    && ['Sales Manager', 'Accounts User', 'Accounts Manager', 'System Manager'].some((role) => reviewRoles.includes(role));  const handleApproveOnboarding = async () => {    if (!docName || !window.confirm(`Approve ${String(formData.shop_name || docName)} and create its ERPNext Customer record?`)) return;    setIsReviewingOnboarding(true);    setError(null);    setSuccessMessage(null);    try {      const result = await vmsService.reviewOnboardingRequest(docName, 'approve');      const refreshed = await documentService.get(doctype, docName);      setFormData(refreshed);      setDocstatus(refreshed.docstatus ?? 1);      setSuccessMessage(result.customer ? `Approved. Customer ${result.customer} was created.` : 'Onboarding request approved.');    } catch (err: any) {      setError(err);    } finally {      setIsReviewingOnboarding(false);    }  };  if (isLoading) {
     return (
       <div className="p-8 text-center bg-white border border-slate-200 rounded-2xl shadow-xs">
         <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
@@ -309,7 +309,7 @@ export function DocTypeForm({
           )}
 
           {activeViewMode === 'form' && (
-            <>
+            <>              {canReviewOnboarding && (                <button                  type="button"                  onClick={handleApproveOnboarding}                  disabled={isReviewingOnboarding}                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 rounded-xl transition-colors shadow-xs cursor-pointer"                >                  <CheckCircle className="w-3.5 h-3.5" />                  {isReviewingOnboarding ? 'Approving…' : 'Approve & Create Customer'}                </button>              )}
               {!isReadOnly && canWrite && (
                 <button
                   type="button"

@@ -682,6 +682,27 @@ class VmsService {
     return res;
   }
 
+  public async getSalesOrderAllocationItems(salesOrder: string): Promise<{ sales_order: string; customer: string; items: Array<Record<string, any>> }> {
+    return httpClient<{ sales_order: string; customer: string; items: Array<Record<string, any>> }>(
+      '/api/erp/method/vms.api.fleet.get_sales_order_allocation_items',
+      { method: 'POST', body: JSON.stringify({ sales_order: salesOrder }) }
+    );
+  }
+
+  public async reviewOnboardingRequest(requestName: string, action: 'approve' | 'reject', rejectionReason?: string): Promise<{ status: string; action: string; customer?: string; request?: string }> {
+    return httpClient<{ status: string; action: string; customer?: string; request?: string }>(
+      '/api/erp/method/vms.api.customer.review_onboarding_request',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          request_name: requestName,
+          action,
+          rejection_reason: rejectionReason || null,
+        }),
+      }
+    );
+  }
+
   /**
    * FIELD SALES: Record Payment Collection
    * Strict security: Drivers are prohibited from calling this.
