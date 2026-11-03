@@ -16,7 +16,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
+// Base64 expands uploads by ~33%; VMS limits decoded onboarding evidence to 8 MB.
+// Leave enough headroom for that bounded JSON envelope without accepting unbounded bodies.
+app.use(express.json({ limit: '12mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health endpoint

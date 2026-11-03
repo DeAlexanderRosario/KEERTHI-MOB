@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Table as TableIcon } from 'lucide-react';
 import { metadataService } from '../../services/metadataService';
+import { attachmentService } from '../../services/attachmentService';
 import type { DocField, DocTypeMeta } from '../../services/types';
 
 interface ChildTableEditorProps {
@@ -18,6 +19,7 @@ export function ChildTableEditor({
 }: ChildTableEditorProps) {
   const [meta, setMeta] = useState<DocTypeMeta | null>(null);
   const [columns, setColumns] = useState<DocField[]>([]);
+  const [linkOptions, setLinkOptions] = useState<Record<string, Array<{ value: string; description?: string }>>>({});
 
   useEffect(() => {
     let active = true;
@@ -135,6 +137,46 @@ export function ChildTableEditor({
                             onChange={(e) => handleCellChange(idx, col.fieldname, e.target.checked ? 1 : 0)}
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
+                        ) : col.fieldtype === 'Link' && col.options ? (
+                          <div className="relative min-w-36">
+                            <input
+                              type="text"
+                              value={val}
+                              onFocus={async () => {
+                                try {
+                                  const options = await attachmentService.searchLink(col.options!, String(val || ''));
+                                  setLinkOptions((current) => ({ ...current, [`${idx}:${col.fieldname}`]: options }));
+                                } catch { /* Keep the current value visible if lookup is unavailable. */ }
+                              }}
+                              onChange={async (e) => {
+                                const text = e.target.value;
+                                handleCellChange(idx, col.fieldname, text);
+                                try {
+                                  const options = await attachmentService.searchLink(col.options!, text);
+                                  setLinkOptions((current) => ({ ...current, [`${idx}:${col.fieldname}`]: options }));
+                                } catch { /* Keep manual entry; ERP validates on save. */ }
+                              }}
+                              className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:border-blue-500 focus:outline-none"
+                              placeholder={`Search ${col.options}...`}
+                            />
+                            {(linkOptions[`${idx}:${col.fieldname}`]?.length ?? 0) > 0 && (
+                              <div className="absolute z-30 left-0 right-0 top-full max-h-36 overflow-y-auto bg-white border border-slate-200 rounded shadow-lg">
+                                {linkOptions[`${idx}:${col.fieldname}`].map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleCellChange(idx, col.fieldname, option.value);
+                                      setLinkOptions((current) => ({ ...current, [`${idx}:${col.fieldname}`]: [] }));
+                                    }}
+                                    className="block w-full text-left px-2 py-1.5 hover:bg-slate-50 truncate"
+                                  >
+                                    {option.value}{option.description ? ` — ${option.description}` : ''}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <input
                             type={isNum ? 'number' : 'text'}

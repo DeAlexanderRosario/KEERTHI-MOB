@@ -22,6 +22,7 @@ import {
   Tag,
   ArrowDownCircle,
   ExternalLink,
+  Navigation,
 } from 'lucide-react';
 import {
   vmsService,
@@ -285,6 +286,17 @@ export function VisitTimelineView({
             <Plus className="w-4 h-4 text-[#20D52E]" />
             <span>Log Activity</span>
           </button>
+
+          {onOpenVisitModal && (
+            <button
+              onClick={() => onOpenVisitModal(selectedShop)}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold active:scale-95 transition-all shadow-xs border border-slate-200"
+              title="Geofenced GPS Check-In (200m radius)"
+            >
+              <Navigation className="w-4 h-4 text-emerald-600" />
+              <span>GPS Visit</span>
+            </button>
+          )}
 
           {onOpenOrderModal && (
             <button

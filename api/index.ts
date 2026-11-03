@@ -11,7 +11,8 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
+// Match the bounded VMS onboarding image payload size used by the local server.
+app.use(express.json({ limit: '12mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoints

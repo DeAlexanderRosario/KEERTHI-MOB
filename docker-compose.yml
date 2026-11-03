@@ -1,0 +1,26 @@
+services:
+  keerthi-erp-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: keerthi-erp-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      ERPNEXT_BASE_URL: http://frontend:8080
+    ports:
+      - "3001:3000"
+    networks:
+      - frappe_docker_frappe_network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  frappe_docker_frappe_network:
+    external: true
+

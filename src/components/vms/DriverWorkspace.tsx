@@ -845,23 +845,21 @@ export function DriverWorkspace() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
             <h3 className="text-base font-bold text-slate-900 mb-2">Record Delivery Exception</h3>
             <p className="text-xs text-slate-500 mb-4">
-              Select the reason why stop #{selectedStop.stop_sequence} ({selectedStop.customer_name}) could not be completed.
+              Explain why stop #{selectedStop.stop_sequence} ({selectedStop.customer_name}) could not be completed.
             </p>
 
             <form onSubmit={handleFailDelivery} className="space-y-4 text-xs sm:text-sm">
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">Reason for Failure</label>
-                <select
+                <textarea
+                  rows={3}
+                  required
+                  maxLength={1000}
+                  placeholder="Describe the delivery issue"
                   value={failReason}
                   onChange={(e) => setFailReason(e.target.value)}
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium"
-                >
-                  <option value="Shop Closed / Locked">Shop Closed / Locked</option>
-                  <option value="Proprietor Unavailable">Proprietor / Contact Person Unavailable</option>
-                  <option value="Goods Refused by Customer">Goods Refused by Customer</option>
-                  <option value="Incorrect Address / Location Not Found">Incorrect Address / Location Not Found</option>
-                  <option value="Road Blocked / Vehicle Inaccessible">Road Blocked / Vehicle Inaccessible</option>
-                </select>
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
