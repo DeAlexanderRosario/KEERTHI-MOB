@@ -6,7 +6,6 @@
 import { httpClient } from './httpClient';
 import { ErpError } from './errors';
 import type { SessionUser, SessionHealth } from './types';
-import { setSessionTokens } from './sessionTokens';
 
 type SessionListener = (user: SessionUser | null, health: SessionHealth) => void;
 
@@ -17,7 +16,17 @@ class AuthService {
   private initPromise: Promise<SessionUser | null> | null = null;
 
   constructor() {
-    // Initial state
+    // Remove legacy JavaScript-readable ERP credentials left by earlier app versions.
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('keerthi_erp_sid');
+        window.sessionStorage.removeItem('keerthi_erp_csrf');
+        window.sessionStorage.removeItem('keerthi_vms_shop_kyc');
+        window.localStorage.removeItem('keerthi_vms_shop_kyc');
+      }
+    } catch {
+      // Storage may be disabled by the browser.
+    }
   }
 
   public subscribe(listener: SessionListener): () => void {
@@ -62,6 +71,22 @@ class AuthService {
     return roles.some((r) => this.currentUser!.roles.includes(r));
   }
 
+  private clearSensitiveKycCache(): void {
+    try {
+      if (typeof window !== 'undefined') {
+        for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+          const key = window.sessionStorage.key(index);
+          if (key?.startsWith('keerthi_vms_shop_kyc')) {
+            window.sessionStorage.removeItem(key);
+          }
+        }
+        // Remove sensitive KYC metadata persisted by older app versions.
+        window.localStorage.removeItem('keerthi_vms_shop_kyc');
+      }
+    } catch {
+      // Storage may be disabled by the browser.
+    }
+  }
   /**
    * Initializes session from server
    */
@@ -76,7 +101,6 @@ class AuthService {
           email?: string;
           fullName?: string;
           roles?: string[];
-          serverBaseUrl?: string;
           company?: string;
           currency?: string;
           fiscalYear?: string;
@@ -89,7 +113,6 @@ class AuthService {
             email: session.email || session.user,
             fullName: session.fullName || session.user,
             roles: session.roles || [],
-            serverBaseUrl: session.serverBaseUrl || 'https://erp.keerthigroup.co.in',
             company: session.company,
             currency: session.currency || 'INR',
             fiscalYear: session.fiscalYear,
@@ -127,28 +150,21 @@ class AuthService {
         email?: string;
         fullName?: string;
         roles?: string[];
-        serverBaseUrl?: string;
         company?: string;
         currency?: string;
         fiscalYear?: string;
-        sid?: string;
-        csrf?: string;
       }>('/api/erp/auth/login', {
         method: 'POST',
         body: JSON.stringify({ usr: usr.trim(), pwd }),
       });
 
-      if (response.sid) {
-        setSessionTokens(response.sid, response.csrf);
-      }
-
+      this.clearSensitiveKycCache();
       this.currentUser = {
         authenticated: true,
         user: response.user,
         email: response.email || usr.trim(),
         fullName: response.fullName || response.user,
         roles: response.roles || [],
-        serverBaseUrl: response.serverBaseUrl || 'https://erp.keerthigroup.co.in',
         company: response.company,
         currency: response.currency || 'INR',
         fiscalYear: response.fiscalYear,
@@ -159,7 +175,6 @@ class AuthService {
     } catch (err) {
       this.currentUser = null;
       this.health = 'unauthenticated';
-      setSessionTokens(null, null);
       this.notify();
       throw err;
     }
@@ -174,10 +189,10 @@ class AuthService {
     } catch (err) {
       // Continue cleanup on failure
     } finally {
+      this.clearSensitiveKycCache();
       this.currentUser = null;
       this.health = 'unauthenticated';
       this.initPromise = null;
-      setSessionTokens(null, null);
       this.notify();
     }
   }

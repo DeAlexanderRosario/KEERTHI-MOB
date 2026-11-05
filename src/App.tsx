@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, ArrowRightLeft } from 'lucide-react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
+import { Menu } from 'lucide-react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { MobileFloatingNav } from './components/layout/MobileFloatingNav';
 import { LoginPage } from './components/auth/LoginPage';
-import { DashboardModule } from './components/modules/DashboardModule';
-import { FieldSalesWorkspace } from './components/vms/FieldSalesWorkspace';
-import { BillingModule } from './components/modules/BillingModule';
-import { AccountsModule } from './components/modules/AccountsModule';
-import { SalesModule } from './components/modules/SalesModule';
-import { PurchasesModule } from './components/modules/PurchasesModule';
-import { StockModule } from './components/modules/StockModule';
-import { DeliveryModule } from './components/modules/DeliveryModule';
-import { HrModule } from './components/modules/HrModule';
-import { ReportsHubModule } from './components/modules/ReportsHubModule';
-import { SettingsDiagnosticsModule } from './components/modules/SettingsDiagnosticsModule';
+const DashboardModule = lazy(() => import('./components/modules/DashboardModule').then((m) => ({ default: m.DashboardModule })));
+const FieldSalesWorkspace = lazy(() => import('./components/vms/FieldSalesWorkspace').then((m) => ({ default: m.FieldSalesWorkspace })));
+const BillingModule = lazy(() => import('./components/modules/BillingModule').then((m) => ({ default: m.BillingModule })));
+const AccountsModule = lazy(() => import('./components/modules/AccountsModule').then((m) => ({ default: m.AccountsModule })));
+const SalesModule = lazy(() => import('./components/modules/SalesModule').then((m) => ({ default: m.SalesModule })));
+const PurchasesModule = lazy(() => import('./components/modules/PurchasesModule').then((m) => ({ default: m.PurchasesModule })));
+const StockModule = lazy(() => import('./components/modules/StockModule').then((m) => ({ default: m.StockModule })));
+const DeliveryModule = lazy(() => import('./components/modules/DeliveryModule').then((m) => ({ default: m.DeliveryModule })));
+const HrModule = lazy(() => import('./components/modules/HrModule').then((m) => ({ default: m.HrModule })));
+const ReportsHubModule = lazy(() => import('./components/modules/ReportsHubModule').then((m) => ({ default: m.ReportsHubModule })));
+const SettingsDiagnosticsModule = lazy(() => import('./components/modules/SettingsDiagnosticsModule').then((m) => ({ default: m.SettingsDiagnosticsModule })));
 import { authService } from './services/authService';
 import type { SessionUser } from './services/types';
 
@@ -105,6 +105,13 @@ export default function App() {
         />
 
         <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 lg:p-8 max-w-7xl mx-auto w-full pb-[max(8rem,calc(env(safe-area-inset-bottom)+6.5rem))] md:pb-8">
+          <Suspense
+            fallback={
+              <div className="flex min-h-48 items-center justify-center text-sm text-slate-500" role="status">
+                Loading workspace…
+              </div>
+            }
+          >
           {activeModuleId === 'dashboard' && (
             <DashboardModule
               onNavigateModule={handleNavigate}
@@ -155,6 +162,7 @@ export default function App() {
           {activeModuleId === 'reports' && <ReportsHubModule />}
 
           {activeModuleId === 'settings' && <SettingsDiagnosticsModule />}
+          </Suspense>
         </main>
       </div>
 

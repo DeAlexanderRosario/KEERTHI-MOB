@@ -123,7 +123,6 @@ export interface SessionUser {
   email: string;
   fullName: string;
   roles: string[];
-  serverBaseUrl: string;
   company?: string;
   currency?: string;
   fiscalYear?: string;

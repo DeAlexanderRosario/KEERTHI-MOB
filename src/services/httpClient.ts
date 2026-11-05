@@ -5,7 +5,6 @@
 
 import { ErpError, parseFrappeErrorMessage } from './errors';
 import type { FrappeEnvelope } from './types';
-import { getSessionTokens } from './sessionTokens';
 
 export interface RequestOptions extends RequestInit {
   timeoutMs?: number;
@@ -26,7 +25,6 @@ export async function httpClient<T = unknown>(
   }
 
   let response: Response;
-  const session = getSessionTokens();
   try {
     response = await fetch(path, {
       ...fetchOptions,
@@ -37,8 +35,6 @@ export async function httpClient<T = unknown>(
         ...(fetchOptions.body && !(fetchOptions.body instanceof FormData)
           ? { 'Content-Type': 'application/json' }
           : {}),
-        ...(session.sid ? { 'X-ERP-Session': session.sid } : {}),
-        ...(session.csrf ? { 'X-ERP-CSRF': session.csrf } : {}),
         ...fetchOptions.headers,
       },
     });

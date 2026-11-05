@@ -55,17 +55,14 @@ export function ChildTableEditor({
   }, [tableDocType]);
 
   const handleCellChange = (rowIndex: number, fieldname: string, value: any) => {
-    const updated = [...rows];
-    updated[rowIndex] = { ...updated[rowIndex], [fieldname]: value };
-    if (fieldname === 'sales_order' && tableDocType === 'Vehicle Allocation Order') {
-      updated[rowIndex] = {
-        ...updated[rowIndex],
-        sales_order_item: '',
-        item_code: '',
-        customer: '',
-        warehouse: '',
-      };
-    }
+    const updated = rows.map((row, index) => {
+      if (index !== rowIndex) return row;
+      const changed = { ...row, [fieldname]: value };
+      if (fieldname === 'sales_order' && tableDocType === 'Vehicle Allocation Order') {
+        return { ...changed, sales_order_item: '', item_code: '', customer: '', warehouse: '' };
+      }
+      return changed;
+    });
     onChange(updated);
   };
 
@@ -91,15 +88,20 @@ export function ChildTableEditor({
   };
 
   const chooseSalesOrderItem = (rowIndex: number, item: Record<string, any>) => {
-    const updated = [...rows];
-    updated[rowIndex] = {
-      ...updated[rowIndex],
-      sales_order_item: item.name,
-      item_code: item.item_code,
-      customer: item.__customer || item.customer || updated[rowIndex].customer,
-      warehouse: item.warehouse || updated[rowIndex].warehouse,
-      allocated_qty: item.available_qty > 0 ? item.available_qty : updated[rowIndex].allocated_qty,
-    };
+    const existing = rows[rowIndex];
+    if (!existing) return;
+    const updated = rows.map((row, index) =>
+      index === rowIndex
+        ? {
+            ...row,
+            sales_order_item: item.name,
+            item_code: item.item_code,
+            customer: item.__customer || item.customer || existing.customer,
+            warehouse: item.warehouse || existing.warehouse,
+            allocated_qty: item.available_qty > 0 ? item.available_qty : existing.allocated_qty,
+          }
+        : row
+    );
     onChange(updated);
   };
 

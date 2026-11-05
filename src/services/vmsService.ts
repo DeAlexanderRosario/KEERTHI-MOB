@@ -7,6 +7,7 @@
 import { httpClient } from './httpClient';
 import { documentService } from './documentService';
 import { ErpError } from './errors';
+import { authService } from './authService';
 
 export type TimelineStage = 'onboarding' | 'visit' | 'order' | 'delivery' | 'collection' | 'followup';
 
@@ -251,6 +252,35 @@ const LOCAL_SHOP_PHOTOS_KEY = 'keerthi_vms_shop_photos';
 const LOCAL_TIMELINE_EVENTS_KEY = 'keerthi_vms_timeline_events';
 const LOCAL_SHOP_GPS_KEY = 'keerthi_vms_shop_gps';
 const LOCAL_SHOP_KYC_KEY = 'keerthi_vms_shop_kyc';
+function getKycSessionStorageKey(): string | null {
+  const user = authService.getUser()?.user?.trim().toLowerCase();
+  return user ? `${LOCAL_SHOP_KYC_KEY}:${user}` : null;
+}
+
+const MAX_ONBOARDING_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_SINGLE_ONBOARDING_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function decodedDataUrlBytes(value?: string): number {
+  if (!value?.startsWith('data:')) return 0;
+  const comma = value.indexOf(',');
+  if (comma < 0 || !value.slice(0, comma).includes(';base64')) return 0;
+  const encoded = value.slice(comma + 1);
+  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+  return Math.max(0, Math.floor(encoded.length * 3 / 4) - padding);
+}
+
+function validateOnboardingImageBudget(shopPhoto?: string, documents: KycDocument[] = []): void {
+  const images = [shopPhoto, ...documents.flatMap((doc) => [doc.front_photo_url, doc.back_photo_url])]
+    .filter((value): value is string => Boolean(value?.startsWith('data:')));
+  const sizes = images.map(decodedDataUrlBytes);
+  if (sizes.some((size) => size > MAX_SINGLE_ONBOARDING_IMAGE_BYTES)) {
+    throw new Error('Each onboarding image must be 5 MB or smaller after preparation.');
+  }
+  if (sizes.reduce((sum, size) => sum + size, 0) > MAX_ONBOARDING_IMAGE_BYTES) {
+    throw new Error('The combined shop and KYC images exceed 8 MB. Remove optional back-side photos or some optional KYC images, then retry.');
+  }
+}
+
 const LOCAL_OFFLINE_VISITS_KEY = 'keerthi_vms_offline_visits';
 const LOCAL_ONBOARDED_SHOPS_KEY = 'keerthi_vms_onboarded_shops';
 
@@ -431,6 +461,7 @@ class VmsService {
    * Calls vms.api.customer.submit_onboarding_request
    */
   public async submitOnboardingRequest(data: CustomerOnboardingData): Promise<{ status: string; request_name: string; customer_name: string }> {
+    validateOnboardingImageBudget(data.shop_photo_url, data.kyc_documents || []);
     if (data.shop_photo_url) {
       this.saveShopPhoto(data.customer_name, data.shop_photo_url, {
         address: data.address,
@@ -448,10 +479,6 @@ class VmsService {
         gps_accuracy: data.gps_accuracy,
         landmark: data.landmark,
       });
-    }
-
-    if (data.kyc_documents && data.kyc_documents.length > 0) {
-      this.saveKycDocuments(data.customer_name, data.kyc_documents);
     }
 
     // Build documents_json payload for Frappe DocType attachment
@@ -981,10 +1008,12 @@ class VmsService {
    */
   public saveKycDocuments(customerName: string, docs: KycDocument[]) {
     try {
+      const storageKey = getKycSessionStorageKey();
+      if (!storageKey) return;
       const all = this.getAllKycRegistry();
       const key = customerName.trim().toLowerCase();
       all[key] = docs;
-      localStorage.setItem(LOCAL_SHOP_KYC_KEY, JSON.stringify(all));
+      sessionStorage.setItem(storageKey, JSON.stringify(all));
     } catch (e) {
       console.warn('Failed to save KYC docs', e);
     }
@@ -995,7 +1024,6 @@ class VmsService {
     const all = this.getAllKycRegistry();
     return all[customerName.trim().toLowerCase()] || [];
   }
-
   public updateKycStatus(
     customerName: string,
     docId: string,
@@ -1020,13 +1048,14 @@ class VmsService {
 
   private getAllKycRegistry(): Record<string, KycDocument[]> {
     try {
-      const raw = localStorage.getItem(LOCAL_SHOP_KYC_KEY);
+      const storageKey = getKycSessionStorageKey();
+      if (!storageKey) return {};
+      const raw = sessionStorage.getItem(storageKey);
       return raw ? JSON.parse(raw) : {};
     } catch {
       return {};
     }
   }
-
   /**
    * Geofencing distance calculation using Haversine formula (returns meters)
    */

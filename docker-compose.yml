@@ -9,6 +9,16 @@ services:
       NODE_ENV: production
       PORT: 3000
       ERPNEXT_BASE_URL: http://frontend:8080
+      APP_URL: ${APP_URL:-http://localhost:3001}
+    user: "1000:1000"
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "3001:3000"
     networks:

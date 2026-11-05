@@ -14,6 +14,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { KycDocument, KycDocumentType } from '../../services/vmsService';
+import { optimizeImageToDataUrl } from '../../utils/optimizeImage';
 
 interface KycDocumentUploaderProps {
   documents: KycDocument[];
@@ -44,26 +45,28 @@ export function KycDocumentUploader({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
 
-  // Handle Front Document File
-  const handleFrontUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress camera/gallery images before storing or sending them as JSON.
+  const handleFrontUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setFrontImage(reader.result as string);
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      setFrontImage(await optimizeImageToDataUrl(file));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not prepare this image.');
+      e.target.value = '';
     }
   };
 
-  // Handle Back Document File
-  const handleBackUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setBackImage(reader.result as string);
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      setBackImage(await optimizeImageToDataUrl(file));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not prepare this image.');
+      e.target.value = '';
     }
   };
-
   // Add Document
   const handleAddDocument = (e: React.FormEvent) => {
     e.preventDefault();

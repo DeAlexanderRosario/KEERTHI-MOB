@@ -44,40 +44,9 @@ import { KycDocumentUploader } from './KycDocumentUploader';
 import { MultiProductOrderModal } from './MultiProductOrderModal';
 import { GeofencedVisitModal } from './GeofencedVisitModal';
 import { ProductPriceManagerModal } from './ProductPriceManagerModal';
+import { optimizeImageToDataUrl } from '../../utils/optimizeImage';
 
-async function optimizeOnboardingPhoto(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) throw new Error('Choose an image file.');
-  const bitmap = await createImageBitmap(file);
-  try {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('This browser cannot process the selected image.');
 
-    // Normalize camera formats (including HEIC when the browser can decode it)
-    // to JPEG before JSON transport; the original file size is not constrained.
-    let blob: Blob | null = null;
-    for (const maxDimension of [1920, 1600, 1280, 960]) {
-      const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      for (const quality of [0.84, 0.72, 0.60, 0.48]) {
-        blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
-        if (blob && blob.size <= 4 * 1024 * 1024) break;
-      }
-      if (blob && blob.size <= 4 * 1024 * 1024) break;
-    }
-    if (!blob || blob.size > 4 * 1024 * 1024) throw new Error('This image could not be optimized enough for a reliable upload. Retake it in standard photo quality or choose another image.');
-    return await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Could not read the prepared image.'));
-      reader.onerror = () => reject(new Error('Could not read the prepared image.'));
-      reader.readAsDataURL(blob);
-    });
-  } finally {
-    bitmap.close();
-  }
-}
 
 interface FieldSalesWorkspaceProps {
   onOpenOnboardingRequest?: (requestName: string) => void;
@@ -283,7 +252,7 @@ export function FieldSalesWorkspace({ onOpenOnboardingRequest }: FieldSalesWorks
     const file = e.target.files?.[0];
     if (file) {
       try {
-        setShopPhotoData(await optimizeOnboardingPhoto(file));
+        setShopPhotoData(await optimizeImageToDataUrl(file));
       } catch (error: any) {
         alert(error?.message || 'Could not prepare this image. Try another photo.');
       } finally {

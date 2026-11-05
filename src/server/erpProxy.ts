@@ -5,73 +5,59 @@
 
 import express from 'express';
 import type { Request, Response } from 'express';
+import { buildErpTargetUrl, isAllowedErpMethodName, isSameOriginBrowserRequest, parseErpOrigin } from './erpSecurity';
 
 const { Router } = express;
 
 export const erpRouter = Router();
 
-const ERPNEXT_BASE_URL = (process.env.ERPNEXT_BASE_URL || 'https://erp.keerthigroup.co.in').replace(/\/+$/, '');
+const ERPNEXT_BASE_URL = (process.env.ERPNEXT_BASE_URL || 'http://localhost:8080').replace(/\/+$/, '');
+const ERP_BASE = parseErpOrigin(ERPNEXT_BASE_URL);
 
 const SID_COOKIE = 'keerthi_sid';
 const CSRF_COOKIE = 'keerthi_csrf';
 
 function getTargetUrl(path: string): URL {
-  const cleanPath = path.replace(/^\/+/, '');
-  return new URL(cleanPath, `${ERPNEXT_BASE_URL}/`);
+  return buildErpTargetUrl(ERP_BASE, path);
 }
 
 function extractCookie(cookieHeader: string | undefined, name: string): string | undefined {
   if (!cookieHeader) return undefined;
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;\\s]+)`));
-  return match ? match[1] : undefined;
+  for (const cookie of cookieHeader.split(';')) {
+    const separator = cookie.indexOf('=');
+    if (separator < 0 || cookie.slice(0, separator).trim() !== name) continue;
+    return cookie.slice(separator + 1).trim() || undefined;
+  }
+  return undefined;
 }
 
 function getUpstreamCookies(req: Request): string | undefined {
-  const headerSession = req.headers['x-erp-session'] as string | undefined;
-  const authHeader = req.headers.authorization;
-  const bearerAuth = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : undefined;
-
-  const sid = req.cookies?.[SID_COOKIE] || extractCookie(req.headers.cookie, SID_COOKIE) || headerSession || bearerAuth;
-  if (!sid || sid === 'Guest') return undefined;
-  return `sid=${sid}; system_user=yes`;
+  // Keep the ERP session server-side; browser-provided headers and bearer tokens are not accepted.
+  const sid = req.cookies?.[SID_COOKIE] || extractCookie(req.headers.cookie, SID_COOKIE);
+  if (!sid || sid === 'Guest' || /[;\r\n]/.test(sid)) return undefined;
+  return 'sid=' + sid + '; system_user=yes';
 }
 
 function getUpstreamCsrf(req: Request): string | undefined {
-  const headerCsrf = req.headers['x-erp-csrf'] as string | undefined;
-  return req.cookies?.[CSRF_COOKIE] || extractCookie(req.headers.cookie, CSRF_COOKIE) || headerCsrf;
+  const token = req.cookies?.[CSRF_COOKIE] || extractCookie(req.headers.cookie, CSRF_COOKIE);
+  return token && !/[;\r\n]/.test(token) ? token : undefined;
 }
 
-// Security: Enforce same-origin check for state-changing requests
+// Reject cross-site requests for every method, including GET. Frappe whitelisted
+// methods may change state unless their endpoint explicitly restricts HTTP verbs.
 function verifySameOrigin(req: Request, res: Response, next: Function) {
-  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-    return next();
+  const expectedOrigin = process.env.APP_URL
+    ? new URL(process.env.APP_URL).origin
+    : (req.secure ? 'https://' : 'http://') + req.get('host');
+  const fetchSite = req.headers['sec-fetch-site'];
+  if (!isSameOriginBrowserRequest(
+    req.method,
+    req.headers.origin,
+    Array.isArray(fetchSite) ? fetchSite[0] : fetchSite,
+    expectedOrigin,
+  )) {
+    return res.status(403).json({ error: 'Cross-origin request forbidden.' });
   }
-
-  const origin = req.headers.origin;
-  const host = (req.headers['x-forwarded-host'] as string) || req.headers.host;
-
-  if (origin && host) {
-    try {
-      const originHost = new URL(origin).host.toLowerCase();
-      const expectedHost = String(host).split(',')[0].trim().toLowerCase();
-      const appUrlHost = process.env.APP_URL ? new URL(process.env.APP_URL).host.toLowerCase() : null;
-
-      const isAllowed =
-        originHost === expectedHost ||
-        (appUrlHost && originHost === appUrlHost) ||
-        originHost.endsWith('.run.app') ||
-        originHost.endsWith('.vercel.app') ||
-        originHost.includes('localhost') ||
-        originHost.includes('127.0.0.1');
-
-      if (!isAllowed) {
-        return res.status(403).json({ error: 'Cross-origin request forbidden.' });
-      }
-    } catch {
-      return res.status(403).json({ error: 'Invalid origin header.' });
-    }
-  }
-
   next();
 }
 
@@ -91,7 +77,6 @@ erpRouter.get('/diagnostics/ping', async (req: Request, res: Response) => {
     const latencyMs = Date.now() - start;
     return res.json({
       status: 'online',
-      serverBaseUrl: ERPNEXT_BASE_URL,
       statusCode: upstreamRes.status,
       latencyMs,
       timestamp: new Date().toISOString(),
@@ -99,8 +84,7 @@ erpRouter.get('/diagnostics/ping', async (req: Request, res: Response) => {
   } catch (err: any) {
     return res.status(502).json({
       status: 'offline',
-      serverBaseUrl: ERPNEXT_BASE_URL,
-      error: err.message || 'Cannot connect to ERPNext',
+      error: 'Cannot connect to ERPNext.',
       latencyMs: Date.now() - start,
     });
   }
@@ -140,7 +124,6 @@ erpRouter.post('/auth/login', async (req: Request, res: Response) => {
       const msg = typeof body.message === 'string' ? body.message : 'Invalid login credentials.';
       return res.status(upstreamRes.status >= 400 && upstreamRes.status < 500 ? upstreamRes.status : 401).json({
         error: msg,
-        details: body,
       });
     }
 
@@ -168,7 +151,7 @@ erpRouter.post('/auth/login', async (req: Request, res: Response) => {
     }
 
     // Set HttpOnly cookies on the client (SameSite=None for iframe support over HTTPS)
-    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    const isHttps = req.secure || (process.env.APP_URL ? new URL(process.env.APP_URL).protocol === 'https:' : false);
     res.cookie(SID_COOKIE, sid, {
       httpOnly: true,
       secure: isHttps,
@@ -280,12 +263,9 @@ erpRouter.post('/auth/login', async (req: Request, res: Response) => {
       roles,
       company,
       currency,
-      sid,
-      csrf,
-      serverBaseUrl: ERPNEXT_BASE_URL,
     });
   } catch (err: any) {
-    return res.status(502).json({ error: 'Could not communicate with ERPNext server.', details: err.message });
+    return res.status(502).json({ error: 'Could not communicate with ERPNext server.' });
   }
 });
 
@@ -404,7 +384,6 @@ erpRouter.get('/auth/session', async (req: Request, res: Response) => {
       roles,
       company,
       currency,
-      serverBaseUrl: ERPNEXT_BASE_URL,
     });
   } catch (err: any) {
     return res.status(502).json({ error: 'Failed to revalidate session with ERPNext.', details: err.message });
@@ -895,8 +874,12 @@ erpRouter.post('/attachments/upload', async (req: Request, res: Response) => {
  */
 erpRouter.all('/method/:methodName(*)', async (req: Request, res: Response) => {
   const methodName = req.params.methodName;
-  if (!methodName) {
-    return res.status(400).json({ error: 'Method name is required.' });
+  if (!['GET', 'POST'].includes(req.method)) {
+    res.setHeader('Allow', 'GET, POST');
+    return res.status(405).json({ error: 'Method not allowed.' });
+  }
+  if (!isAllowedErpMethodName(methodName || '')) {
+    return res.status(400).json({ error: 'Invalid ERP method name.' });
   }
 
   const cookies = getUpstreamCookies(req);
@@ -938,9 +921,7 @@ erpRouter.all('/method/:methodName(*)', async (req: Request, res: Response) => {
     return res.json(body);
   } catch (err: any) {
     return res.status(502).json({
-      error: `Could not execute method ${methodName}.`,
-      details: err.message,
+      error: 'Could not execute ERP method.'
     });
   }
 });
-

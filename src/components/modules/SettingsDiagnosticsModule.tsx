@@ -17,7 +17,6 @@ export function SettingsDiagnosticsModule() {
   const user = authService.getUser();
   const [pingData, setPingData] = useState<{
     status?: string;
-    serverBaseUrl?: string;
     statusCode?: number;
     latencyMs?: number;
     timestamp?: string;
@@ -89,10 +88,8 @@ export function SettingsDiagnosticsModule() {
               <Server className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">ERPNext v16 Target Host</h3>
-              <p className="text-xs font-mono text-slate-500">
-                {pingData?.serverBaseUrl || 'https://erp.keerthigroup.co.in'}
-              </p>
+              <h3 className="text-sm font-bold text-slate-900">ERPNext v16 Service</h3>
+              <p className="text-xs text-slate-500">Connection status and response time</p>
             </div>
           </div>
 

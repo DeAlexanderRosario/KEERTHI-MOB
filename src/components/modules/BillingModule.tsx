@@ -137,22 +137,20 @@ export function BillingModule() {
       handleRemoveItem(index);
       return;
     }
-    const updated = [...cartItems];
-    updated[index] = {
-      ...updated[index],
-      qty: newQty,
-      amount: newQty * updated[index].rate,
-    };
+    const updated = cartItems.map((item, itemIndex) =>
+      itemIndex === index
+        ? { ...item, qty: newQty, amount: newQty * item.rate }
+        : item
+    );
     setCartItems(updated);
   };
 
   const handleUpdateRate = (index: number, newRate: number) => {
-    const updated = [...cartItems];
-    updated[index] = {
-      ...updated[index],
-      rate: newRate,
-      amount: updated[index].qty * newRate,
-    };
+    const updated = cartItems.map((item, itemIndex) =>
+      itemIndex === index
+        ? { ...item, rate: newRate, amount: item.qty * newRate }
+        : item
+    );
     setCartItems(updated);
   };
 
